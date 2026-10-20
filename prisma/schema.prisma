@@ -11,3 +11,171 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  MOBILE_MONEY
+}
+
+// Tout les types doit commencé par une majuscule
+// @db => /> type de donnée accepté par la base de données
+model User {
+  userId       Int      @id @default(autoincrement()) @map("user_id")
+  lastName     String   @map("last_name") @db.VarChar(100)
+  firstName    String   @map("first_name") @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  phoneNumber  String?  @map("phone_number") @db.VarChar(30)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Spécialisation : un utilisateur est soit client, soit professionnel
+  client       Client?
+  professional Professional?
+
+  @@map("users")
+}
+
+model Client {
+  userId    Int       @id @map("user_id")
+  birthDate DateTime? @map("birth_date") @db.Date
+  address   String?   @db.VarChar(255)
+
+  user         User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@map("clients")
+}
+
+model Professional {
+  userId      Int     @id @map("user_id")
+  description String? @db.Text
+  specialty   String? @db.VarChar(150)
+
+  // Relation avec la table parent User 
+  user             User                  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  services         ProfessionalService[]
+  appointments     Appointment[]
+  availabilities   Availability[]
+  unavailabilities Unavailability[]
+
+  @@map("professionals")
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(150)
+  duration    Int
+  price       Decimal @db.Decimal(10, 2)
+  description String? @db.Text
+
+  professionals ProfessionalService[]
+  appointments  Appointment[]
+
+  @@map("services")
+}
+
+// Association PROPOSER (n,n)
+model ProfessionalService {
+  professionalId Int      @map("professional_id")
+  serviceId      Int      @map("service_id")
+  customPrice    Decimal? @map("custom_price") @db.Decimal(10, 2)
+  customDuration Int?     @map("custom_duration")
+
+  professional Professional @relation(fields: [professionalId], references: [userId], onDelete: Cascade)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+  @@index([serviceId])
+  @@map("professional_services")
+}
+
+model Appointment {
+  id                 Int               @id @default(autoincrement())
+  startDatetime      DateTime          @map("start_datetime")
+  endDatetime        DateTime          @map("end_datetime")
+  status             AppointmentStatus @default(PENDING)
+  location           String?           @db.VarChar(255)
+  notes              String?           @db.Text
+  priceAtBooking     Decimal?          @map("price_at_booking") @db.Decimal(10, 2)
+  cancelledAt        DateTime?         @map("cancelled_at")
+  cancellationReason String?           @map("cancellation_reason") @db.VarChar(255)
+  createdAt          DateTime          @map("created_at") @default(now())
+  updateAt           DateTime          @updatedAt @map("update_at")
+
+  clientId       Int @map("client_id")
+  professionalId Int @map("professional_id")
+  serviceId      Int @map("service_id")
+
+  client       Client       @relation(fields: [clientId], references: [userId], onDelete: Restrict)
+  professional Professional @relation(fields: [professionalId], references: [userId], onDelete: Restrict)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  payments     Payment[]
+
+  // Empêche deux rendez-vous au même début pour un même professionnel
+  @@unique([professionalId, startDatetime])
+  @@index([clientId])
+  @@index([serviceId])
+  @@index([startDatetime])
+  @@map("appointments")
+}
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("MGA") @db.VarChar(3)
+  paymentMethod     PaymentMethod @map("payment_method")
+  paymentStatus     PaymentStatus @default(PENDING) @map("payment_status")
+  paymentDate       DateTime?     @map("payment_date")
+  externalReference String?       @map("external_reference") @db.VarChar(100)
+
+  appointmentId Int         @map("appointment_id")
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+
+  @@index([appointmentId])
+  @@map("payments")
+}
+
+model Availability {
+  id        Int       @id @default(autoincrement())
+  dayOfWeek Int       @map("day_of_week") // 0 = dimanche … 6 = samedi
+  startTime DateTime  @map("start_time") @db.Time(0)
+  endTime   DateTime  @map("end_time") @db.Time(0)
+  validFrom DateTime? @map("valid_from") @db.Date
+  validTo   DateTime? @map("valid_to") @db.Date
+
+  professionalId Int          @map("professional_id")
+  professional   Professional @relation(fields: [professionalId], references: [userId], onDelete: Cascade)
+
+  @@index([professionalId, dayOfWeek])
+  @@map("availabilities")
+}
+
+model Unavailability {
+  id            Int      @id @default(autoincrement())
+  startDatetime DateTime @map("start_datetime")
+  endDatetime   DateTime @map("end_datetime")
+  reason        String?  @db.VarChar(255)
+
+  professionalId Int          @map("professional_id")
+  professional   Professional @relation(fields: [professionalId], references: [userId], onDelete: Cascade)
+
+  @@index([professionalId, startDatetime])
+  @@map("unavailabilities")
+}
