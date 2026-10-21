@@ -76,7 +76,7 @@ export class AuthService {
                 return this.toAuthUser(clientUser);
             }
 
-            const professionalUser = await this.userRepository.createClientUser(newUserData);
+            const professionalUser = await this.userRepository.createProfessionalUser(newUserData);
             return this.toAuthUser(professionalUser);
         } catch (error) {
             // Cas rare : deux inscriptions avec le même email au même instant

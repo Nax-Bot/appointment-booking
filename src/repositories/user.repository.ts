@@ -21,4 +21,54 @@ export class UserRepository {
             include: { client: true, professional: true }
         })
     }
+
+    async findById(userId: number, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.findUnique({
+            where: { userId: userId },
+            include: { client: true, professional: true }
+        });
+    }
+
+    async createClientUser(data: NewUserData, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.create({
+            data: {
+                lastName: data.lastName,
+                firstName: data.firstName,
+                email: data.email,
+                passwordHash: data.passwordHash,
+                phoneNumber: data.phoneNumber,
+                client: { create: {} },
+            },
+            include: { client: true, professional: true }
+        });
+    }
+
+    async createProfessionalUser(data: NewUserData, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.create({
+            data: {
+                lastName: data.lastName,
+                firstName: data.firstName,
+                email: data.email,
+                passwordHash: data.passwordHash,
+                phoneNumber: data.phoneNumber,
+                professional: { create: {} },
+            },
+            include: { client: true, professional: true },
+        });
+    }
 }

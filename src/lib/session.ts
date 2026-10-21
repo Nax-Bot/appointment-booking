@@ -6,6 +6,8 @@ const SEVEN_DAYS_IN_SECONDS = 60 * 60 * 24 * 7;
 
 // Crée le JWT et le place dans un cookie httpOnly (invisible pour le JavaScript du navigateur)
 export async function createSession(userId: number, role: Role) {
+
+  // Creation du Token
   const token = await createToken(userId, role);
   const cookieStore = await cookies();
 

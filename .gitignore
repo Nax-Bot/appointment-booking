@@ -42,3 +42,16 @@ next-env.d.ts
 
 /src/generated/prisma
 
+/src/learn/
+/src/test/
+
+# test
+/src/app/api/test-role/
+# test 
+/src/controllers/test.controller.ts
+
+# apprendre prisma
+/src/lib/prisma.learn.ts
+
+# Postman collection
+/postman/collections/Auth Request/

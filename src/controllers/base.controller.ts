@@ -1,6 +1,9 @@
 import { ZodType } from "zod";
-import { AppError, ValidationError } from "@/lib/errors";
+import { AppError, ValidationError, UnauthorizedError, ForbiddenError } from "@/lib/errors";
 import { jsonOk, jsonCreated, jsonError } from "@/lib/http";
+import { readSession } from "@/lib/session";
+import { Role, SessionData } from "@/lib/auth";
+import { idParamSchema } from "@/validations/common.validation";
 
 export class BaseController {
   // Lit le corps JSON de la requête. Si le JSON est cassé, on lance une erreur 400.
@@ -37,6 +40,34 @@ export class BaseController {
     }
 
     return result.data;
+  }
+
+  // Transforme un identifiant reçu dans l'URL (texte) en nombre.
+  // Si ce n'est pas un entier positif, on lance une erreur 400.
+  protected parseId(idText: string): number {
+    const result = idParamSchema.safeParse(idText);
+
+    if (result.success === false) {
+      throw new ValidationError("Identifiant invalide", [result.error.issues[0].message]);
+    }
+
+    return Number(result.data);
+  }
+
+  // Exige une personne connectée. Si un rôle est demandé, exige aussi ce rôle.
+  // Renvoie la session (userId et rôle) pour que le controller l'utilise.
+  protected async requireSession(role?: Role): Promise<SessionData> {
+    const session = await readSession();
+
+    if (session === null) {
+      throw new UnauthorizedError("Vous devez être connecté");
+    }
+
+    if (role !== undefined && session.role !== role) {
+      throw new ForbiddenError("Vous n'avez pas le droit d'accéder à cette ressource");
+    }
+
+    return session;
   }
 
   // Réponse 200
