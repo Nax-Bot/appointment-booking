@@ -116,8 +116,8 @@ model Appointment {
   priceAtBooking     Decimal?          @map("price_at_booking") @db.Decimal(10, 2)
   cancelledAt        DateTime?         @map("cancelled_at")
   cancellationReason String?           @map("cancellation_reason") @db.VarChar(255)
-  createdAt          DateTime          @map("created_at") @default(now())
-  updateAt           DateTime          @updatedAt @map("update_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
 
   clientId       Int @map("client_id")
   professionalId Int @map("professional_id")
@@ -128,8 +128,7 @@ model Appointment {
   service      Service      @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   payments     Payment[]
 
-  // Empêche deux rendez-vous au même début pour un même professionnel
-  @@unique([professionalId, startDatetime])
+  @@index([professionalId, startDatetime])
   @@index([clientId])
   @@index([serviceId])
   @@index([startDatetime])

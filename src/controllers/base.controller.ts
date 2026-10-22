@@ -17,29 +17,24 @@ export class BaseController {
   }
 
   // Lit le corps puis le vérifie avec un schéma zod.
-  // Si les données sont invalides, on lance une ValidationError avec la liste des problèmes.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected async readAndValidateBody(req: Request, schema: ZodType): Promise<any> {
     const body = await this.readBody(req);
-    const result = schema.safeParse(body);
+    return this.validate(body, schema);
+  }
 
-    if (result.success === false) {
-      const details: string[] = [];
+  // Lit les paramètres de l'URL (?status=PENDING...) puis les vérifie avec un schéma zod.
+  // Les paramètres arrivent toujours sous forme de texte.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected readAndValidateQuery(req: Request, schema: ZodType): any {
+    const url = new URL(req.url);
+    const query: { [key: string]: string } = {};
 
-      for (const issue of result.error.issues) {
-        // On reconstruit le chemin du champ, par exemple "email"
-        const pathParts: string[] = [];
-        for (const part of issue.path) {
-          pathParts.push(String(part));
-        }
-        const pathText = pathParts.join(".");
-        details.push(pathText + " : " + issue.message);
-      }
-
-      throw new ValidationError("Données invalides", details);
+    for (const [key, value] of url.searchParams.entries()) {
+      query[key] = value;
     }
 
-    return result.data;
+    return this.validate(query, schema);
   }
 
   // Transforme un identifiant reçu dans l'URL (texte) en nombre.
@@ -90,5 +85,30 @@ export class BaseController {
 
     console.error(error);
     return jsonError("Erreur interne du serveur", 500, []);
+  }
+
+  // Vérifie des données avec un schéma zod.
+  // Si elles sont invalides, on lance une ValidationError avec la liste des problèmes.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private validate(data: unknown, schema: ZodType): any {
+    const result = schema.safeParse(data);
+
+    if (result.success === false) {
+      const details: string[] = [];
+
+      for (const issue of result.error.issues) {
+        // On reconstruit le chemin du champ, par exemple "status"
+        const pathParts: string[] = [];
+        for (const part of issue.path) {
+          pathParts.push(String(part));
+        }
+        const pathText = pathParts.join(".");
+        details.push(pathText + " : " + issue.message);
+      }
+
+      throw new ValidationError("Données invalides", details);
+    }
+
+    return result.data;
   }
 }

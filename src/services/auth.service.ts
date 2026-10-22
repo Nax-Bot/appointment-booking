@@ -40,6 +40,7 @@ interface UserWithProfiles {
 }
 
 export class AuthService {
+    // On peut declarer les propriété avant de les initialiser
     private userRepository: UserRepository;
 
     constructor(userRepository: UserRepository) {
