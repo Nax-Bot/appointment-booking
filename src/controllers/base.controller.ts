@@ -48,7 +48,7 @@ export class BaseController {
 
     return Number(result.data);
   }
-
+  // -------------------- VERIFICATION DE SESSION ----------- //
   // Exige une personne connectée. Si un rôle est demandé, exige aussi ce rôle.
   // Renvoie la session (userId et rôle) pour que le controller l'utilise.
   protected async requireSession(role?: Role): Promise<SessionData> {

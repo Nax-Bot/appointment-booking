@@ -19,10 +19,11 @@ export class NotFoundError extends AppError {
   }
 }
 
-// 409 : conflit (ex. email déjà utilisé, créneau déjà pris)
+// 409 : conflit (ex. email déjà utilisé, créneau déjà pris, service déjà existant).
+// Les détails sont facultatifs : sans eux, la liste est vide.
 export class ConflictError extends AppError {
-  constructor(message: string) {
-    super(message, 409, []);
+  constructor(message: string, details: string[] = []) {
+    super(message, 409, details);
     this.name = "ConflictError";
   }
 }

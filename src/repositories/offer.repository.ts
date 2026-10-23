@@ -42,9 +42,12 @@ export class OfferRepository {
             client = db;
         }
 
+        // On peut creer ou modifier l'offre
         return client.professionalService.upsert({
             where: { professionalId_serviceId: { professionalId: professionalId, serviceId: serviceId } },
+            // modification
             update: { customPrice: customPrice, customDuration: customDuration },
+            // creation
             create: {
                 professionalId: professionalId,
                 serviceId: serviceId,

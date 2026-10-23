@@ -1,6 +1,6 @@
 import { BaseController } from "@/controllers/base.controller";
 import { ProfessionalService } from "@/services/professional.service";
-import { updateProfessionalSchema } from "@/validations/professional.validation";
+import { updateProfessionalSchema, professionalsQuerySchema } from "@/validations/professional.validation";
 
 export class ProfessionalController extends BaseController {
     private professionalService: ProfessionalService;
@@ -10,11 +10,19 @@ export class ProfessionalController extends BaseController {
         this.professionalService = professionalService;
     }
 
-    // GET /api/professionals : liste (tout utilisateur connecté)
-    async list() {
+    // GET /api/professionals?search=...&serviceId=... : liste et recherche (tout utilisateur connecté)
+    async list(req: Request) {
         try {
             await this.requireSession();
-            const professionals = await this.professionalService.listAll();
+            const query = this.readAndValidateQuery(req, professionalsQuerySchema);
+
+            // serviceId arrive en texte : on le transforme en nombre seulement s'il est présent
+            let serviceId: number | undefined = undefined;
+            if (query.serviceId !== undefined) {
+                serviceId = Number(query.serviceId);
+            }
+
+            const professionals = await this.professionalService.search(query.search, serviceId);
             return this.ok(professionals);
         } catch (error) {
             return this.handleError(error);

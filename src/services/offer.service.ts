@@ -3,10 +3,10 @@ import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { ServiceRepository } from "@/repositories/service.repository";
 import { NotFoundError } from "@/lib/errors";
 
-// Données reçues pour proposer un service
+// Données reçues pour proposer un service : la durée et le prix du professionnel
 export interface SetOfferData {
-    customPrice?: number | null;
-    customDuration?: number | null;
+    customPrice: number;
+    customDuration: number;
 }
 
 // Ce que l'on renvoie : prix et durée effectifs (personnalisés ou ceux du catalogue)
@@ -61,7 +61,7 @@ export class OfferService {
         return result;
     }
 
-    // Propose un service (ou modifie son prix et sa durée s'il est déjà proposé)
+    // Propose un service (ou modifie sa durée et son prix s'il est déjà proposé)
     async setOffer(professionalId: number, serviceId: number, data: SetOfferData): Promise<OfferItem> {
         await this.checkProfessionalExists(professionalId);
 
@@ -71,18 +71,7 @@ export class OfferService {
             throw new NotFoundError("Service introuvable");
         }
 
-        // Champ absent ou null = valeur du catalogue
-        let customPrice: number | null = null;
-        if (data.customPrice !== undefined && data.customPrice !== null) {
-            customPrice = data.customPrice;
-        }
-
-        let customDuration: number | null = null;
-        if (data.customDuration !== undefined && data.customDuration !== null) {
-            customDuration = data.customDuration;
-        }
-
-        const row = await this.offerRepository.upsert(professionalId, serviceId, customPrice, customDuration);
+        const row = await this.offerRepository.upsert(professionalId, serviceId, data.customPrice, data.customDuration);
         return this.toOfferItem(row);
     }
 

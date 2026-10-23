@@ -18,3 +18,18 @@ export const updateProfessionalSchema = z.object({
         .nullable()
         .optional(),
 });
+
+// Paramètres de l'URL pour chercher des professionnels :
+// /api/professionals?search=tojo&serviceId=3 (les deux sont facultatifs).
+// Dans une URL, tout arrive sous forme de texte.
+export const professionalsQuerySchema = z.object({
+    search: z
+        .string()
+        .trim()
+        .max(150, "La recherche est trop longue (150 caractères maximum)")
+        .optional(),
+    serviceId: z
+        .string()
+        .regex(/^[1-9][0-9]*$/, "L'identifiant du service doit être un entier positif")
+        .optional(),
+});
