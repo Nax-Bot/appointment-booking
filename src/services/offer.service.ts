@@ -5,8 +5,8 @@ import { NotFoundError } from "@/lib/errors";
 
 // Données reçues pour proposer un service : la durée et le prix du professionnel
 export interface SetOfferData {
-    customPrice: number;
-    customDuration: number;
+    customPrice: number | null;
+    customDuration: number | null;
 }
 
 // Ce que l'on renvoie : prix et durée effectifs (personnalisés ou ceux du catalogue)
@@ -55,8 +55,10 @@ export class OfferService {
         const rows = await this.offerRepository.findByProfessional(professionalId);
 
         const result: OfferItem[] = [];
-        for (const row of rows) {
-            result.push(this.toOfferItem(row));
+        if (rows) {
+            for (const row of rows) {
+                result.push(this.toOfferItem(row));
+            }
         }
         return result;
     }

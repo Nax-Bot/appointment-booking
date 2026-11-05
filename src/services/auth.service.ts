@@ -48,7 +48,7 @@ export class AuthService {
     }
 
     async register(data: RegisterData): Promise<AuthUser> {
-        // Email -> un seul compte
+        // Email -> un seul comrpte
         const existingUser = await this.userRepository.findByEmail(data.email);
 
         // Ajout d'une erreur [ARRETE LE CODE]pour etre remonter au fichier parent

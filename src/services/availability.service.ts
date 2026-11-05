@@ -108,7 +108,7 @@ export class AvailabilityService {
             throw new ValidationError("L'heure de fin doit être après l'heure de début", []);
         }
 
-        // Règle 2 : les dates de validité existent, et la fin n'est pas avant le début
+        // Règle 2 : les dates de validité existent, et la fin doit etre apres le début
         let validFromText: string | null = null;
         let validFrom: Date | null = null;
         if (input.validFrom !== undefined && input.validFrom !== null) {

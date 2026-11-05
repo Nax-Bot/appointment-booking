@@ -112,7 +112,7 @@ export class ServiceService {
         }
 
         let description: string | null = null;
-        if (input.description !== undefined && input.description !== null) {
+        if (input.description) {
             description = input.description;
         }
 
