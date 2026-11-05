@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
-/* La palette du site. Tailwind en fait des classes :
-   --color-primary donne bg-primary, text-primary, border-primary... */
 @theme {
-    --color-page: #f5f7f2;
-    --color-soft: #dde8d8;
-    --color-accent: #8ba888;
-    --color-primary: #496b50;
-    --color-ink: #1e2b22;
+  --color-page: #f8fafc;
+  --color-tint: #f0fdf4;
+  --color-line: #e5e7eb;
+  --color-ink: #111827;
+  --color-muted: #64748b;
+  --color-primary: #15803d;
+  --color-primary-hover: #166534;
+}
+
+@theme inline {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
 }

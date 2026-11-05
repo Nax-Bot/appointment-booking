@@ -55,7 +55,7 @@ export default function PasswordInput({
     const strength = getPasswordStrength(value);
 
     // Couleurs de la bordure et du halo quand on clique dans le champ
-    let fieldClass = "border-accent focus:border-primary focus:ring-accent/40";
+    let fieldClass = "border-line focus:border-primary focus:ring-primary/20";
     if (hasError) {
         fieldClass = "border-red-300 focus:border-red-400 focus:ring-red-100";
     }
@@ -81,6 +81,7 @@ export default function PasswordInput({
     }
 
     return (
+        // "relative" = repère de position pour le panneau flottant plus bas
         <div className="relative mb-4">
             <label className="block">
                 <span className="mb-1 block text-sm font-medium text-ink">{label}</span>
@@ -100,8 +101,10 @@ export default function PasswordInput({
                         type="button"
                         onClick={() => setVisible(!visible)}
                         aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                        className="absolute top-1/2 right-2 -translate-y-1/2 text-ink/50 hover:text-ink"
+                        className="absolute top-1/2 right-2 -translate-y-1/2 text-muted hover:text-ink"
                     >
+                        {/* Œil barré : le mot de passe est visible, un clic le masque.
+                Œil ouvert : le mot de passe est masqué, un clic l'affiche. */}
                         {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                 </div>
@@ -110,9 +113,14 @@ export default function PasswordInput({
             {hasError && <span className="mt-1 block text-xs text-red-600">{error}</span>}
 
             {showStrength && focused && (
+                // absolute top-full : le panneau est accroché juste sous le champ et flotte
+                // par-dessus le reste de la page, sans pousser le bouton vers le bas.
+                // z-20 : il passe devant les éléments qui le suivent.
                 <div className="absolute top-full right-0 left-0 z-20 mt-1 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
                     <div className="mb-3 flex items-center gap-3">
                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
+                            {/* transition-all duration-500 ease-out : la largeur et la couleur
+                  changent en douceur sur 0,5 seconde au lieu de sauter */}
                             <div
                                 className={
                                     "h-full rounded-full transition-all duration-500 ease-out " + barColor
@@ -125,7 +133,7 @@ export default function PasswordInput({
                         </span>
                     </div>
                     <ul className="grid grid-cols-2 gap-2">
-                        <CheckItem ok={checks.length} text="8 caractères " />
+                        <CheckItem ok={checks.length} text="8 caractères" />
                         <CheckItem ok={checks.uppercase} text="Majuscule" />
                         <CheckItem ok={checks.lowercase} text="Minuscule" />
                         <CheckItem ok={checks.digit} text="Chiffre" />

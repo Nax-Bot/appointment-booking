@@ -86,14 +86,13 @@ export default function Select({ label, value, onChange, options }: SelectProps)
                 onKeyDown={handleKeyDown}
                 aria-haspopup="listbox"
                 aria-expanded={open}
-                className="flex w-full items-center justify-between rounded-lg border border-accent bg-white px-3 py-2 text-left text-ink focus:border-primary focus:ring-2 focus:ring-accent/40 focus:outline-none"
+                className="flex w-full items-center justify-between rounded-lg border border-line bg-white px-3 py-2 text-left text-ink focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             >
                 <span>{selectedLabel}</span>
                 {/* Petite flèche, qui se retourne quand la liste est ouverte */}
                 <ChevronDown
                     className={
-                        "h-4 w-4 text-ink/60 transition-transform duration-200 " +
-                        (open ? "rotate-180" : "")
+                        "h-4 w-4 text-muted transition-transform duration-200 " + (open ? "rotate-180" : "")
                     }
                     strokeWidth={2.5}
                 />
@@ -102,15 +101,15 @@ export default function Select({ label, value, onChange, options }: SelectProps)
             {open && (
                 <ul
                     role="listbox"
-                    className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-soft bg-white py-1 shadow-lg"
+                    className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg"
                 >
                     {/* map = une ligne par choix de la liste */}
                     {options.map((option) => {
                         const isSelected = option.value === value;
 
-                        let optionClass = "text-ink hover:bg-soft";
+                        let optionClass = "text-ink hover:bg-tint";
                         if (isSelected) {
-                            optionClass = "bg-page font-medium text-primary hover:bg-soft";
+                            optionClass = "bg-tint font-medium text-primary";
                         }
 
                         return (

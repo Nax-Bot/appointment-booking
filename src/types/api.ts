@@ -26,3 +26,19 @@ export interface ApiErrorBody {
   error: string;
   details: string[];
 }
+
+// Un professionnel tel que le backend le renvoie (GET /api/professionals/[id])
+export interface Professional {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  specialty: string | null;
+  description: string | null;
+}
+
+// Les données envoyées pour modifier son profil (PATCH /api/professionals/me)
+// null = effacer la valeur
+export interface UpdateProfileInput {
+  specialty: string | null;
+  description: string | null;
+}
