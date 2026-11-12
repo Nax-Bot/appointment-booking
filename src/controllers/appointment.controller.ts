@@ -2,6 +2,7 @@ import { BaseController } from "@/controllers/base.controller";
 import { AppointmentService } from "@/services/appointment.service";
 import {
     createAppointmentSchema,
+    createManualAppointmentSchema,
     listAppointmentsQuerySchema,
     cancelAppointmentSchema,
 } from "@/validations/appointment.validation";
@@ -20,6 +21,18 @@ export class AppointmentController extends BaseController {
             const session = await this.requireSession("CLIENT");
             const data = await this.readAndValidateBody(req, createAppointmentSchema);
             const appointment = await this.appointmentService.create(session.userId, data);
+            return this.created(appointment);
+        } catch (error) {
+            return this.handleError(error);
+        }
+    }
+
+    // POST /api/professionals/me/appointments : un professionnel ajoute un rendez-vous à la main
+    async createManual(req: Request) {
+        try {
+            const session = await this.requireSession("PROFESSIONAL");
+            const data = await this.readAndValidateBody(req, createManualAppointmentSchema);
+            const appointment = await this.appointmentService.createManual(session.userId, data);
             return this.created(appointment);
         } catch (error) {
             return this.handleError(error);
