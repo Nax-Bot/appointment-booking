@@ -3,7 +3,7 @@
 import { SubmitEvent, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/context/session-context";
-import { ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/lib-front/api-client";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
@@ -52,7 +52,7 @@ export default function LoginPage() {
             <Input label="Email" type="email" value={email} onChange={setEmail} />
             <PasswordInput label="Mot de passe" value={password} onChange={setPassword} />
 
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" loading={submitting}>
                 {submitting ? "Connexion..." : "Se connecter"}
             </Button>
 

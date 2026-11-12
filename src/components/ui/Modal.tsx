@@ -6,14 +6,23 @@ import { X } from "lucide-react";
 // Une fenêtre qui s'affiche par-dessus la page, sur un fond sombre.
 // open = visible ou non. onClose = ce qui se passe quand on la ferme (croix ou Échap).
 // Un clic sur le fond sombre ne la ferme pas : on évite de perdre un texte tapé par erreur.
+// allowOverflow = true : ce qui dépasse de la fenêtre reste visible (pour un panneau flottant).
+// Par défaut, une fenêtre trop haute défile à l'intérieur.
 interface ModalProps {
     open: boolean;
     title: string;
     onClose: () => void;
     children: ReactNode;
+    allowOverflow?: boolean;
 }
 
-export default function Modal({ open, title, onClose, children }: ModalProps) {
+export default function Modal({
+    open,
+    title,
+    onClose,
+    children,
+    allowOverflow = false,
+}: ModalProps) {
     // La touche Échap ferme la fenêtre (seulement quand elle est ouverte)
     useEffect(() => {
         function handleKeyDown(event: KeyboardEvent) {
@@ -32,14 +41,19 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
         return null;
     }
 
+    let scrollClass = "max-h-[90vh] overflow-y-auto";
+    if (allowOverflow) {
+        scrollClass = "";
+    }
+
     return (
         // fixed inset-0 = couvre tout l'écran ; z-50 = passe devant tout le reste
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-ink/40 p-4 backdrop-blur-sm">
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}
-                className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+                className={"animate-pop-in w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl " + scrollClass}
             >
                 <div className="mb-5 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-ink">{title}</h2>

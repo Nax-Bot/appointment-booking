@@ -1,15 +1,100 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #f8fafc;
+  --color-page: #f6f8fa;
   --color-tint: #f0fdf4;
   --color-line: #e5e7eb;
   --color-ink: #111827;
   --color-muted: #64748b;
   --color-primary: #15803d;
   --color-primary-hover: #166534;
+
+  /* "backwards" (et pas "both") : après l'animation, plus aucun transform ne reste sur l'élément,
+     sinon les fenêtres modales (position: fixed) restent coincées dans la page au lieu de couvrir l'écran */
+  --animate-page-in: page-in 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-fade-in: fade-in 300ms ease-out both;
+  --animate-rise: rise 480ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-pop-in: pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-soft-pulse: soft-pulse 1.6s ease-in-out infinite;
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.94) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes soft-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
 }
 
 @theme inline {
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Thème du professionnel : même application, accent différent (vert profond / teal) */
+[data-role="PROFESSIONAL"] {
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-tint: #f0fdfa;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-image:
+    radial-gradient(60rem 30rem at 100% -10%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 60%),
+    radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 22%, white);
+}
+
+/* Squelette : bloc gris avec un reflet qui passe */
+.skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    100deg,
+    #eceff3 30%,
+    #f8fafc 50%,
+    #eceff3 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Apparition en cascade : style="--i: 2" sur chaque élément d'une liste */
+.stagger > * {
+  animation: var(--animate-rise);
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

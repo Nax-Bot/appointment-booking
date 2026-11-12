@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
 import { getHomePath } from "@/lib/navigation";
+import AppShellSkeleton from "@/components/layout/AppShellSkeleton";
+import PageLoading from "@/components/ui/PageLoading";
 
-// Cette page n'affiche rien : elle envoie chacun vers la bonne page.
 export default function HomePage() {
   const { user, loading } = useSession();
   const router = useRouter();
@@ -22,5 +23,9 @@ export default function HomePage() {
     }
   }, [loading, user, router]);
 
-  return <p className="p-8">Chargement...</p>;
+  // Connecté : on montre déjà le squelette de son espace pendant la redirection
+  if (user !== null) {
+    return <AppShellSkeleton role={user.role} />;
+  }
+  return <PageLoading kind="spinner" label="Chargement..." tone="client" />;
 }

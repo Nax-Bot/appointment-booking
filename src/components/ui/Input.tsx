@@ -46,7 +46,7 @@ export default function Input({
                 onChange={(event) => onChange(event.target.value)}
                 onBlur={onBlur}
                 className={
-                    "block w-full rounded-lg border bg-white px-3 py-2 text-ink placeholder:text-muted/60 focus:ring-2 focus:outline-none " +
+                    "block w-full rounded-lg border bg-white px-3 py-2.5 text-ink transition-shadow duration-200 placeholder:text-muted/60 focus:ring-2 focus:outline-none " +
                     fieldClass
                 }
             />

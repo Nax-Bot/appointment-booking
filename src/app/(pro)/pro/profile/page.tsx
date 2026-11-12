@@ -1,9 +1,10 @@
 "use client";
 
 import { SubmitEvent, useEffect, useState } from "react";
+import PageLoading from "@/components/ui/PageLoading";
 import { Pencil } from "lucide-react";
 import { useSession } from "@/context/session-context";
-import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
+import { apiGet, apiPatch, ApiError } from "@/lib/lib-front/api-client";
 import { Professional, UpdateProfileInput } from "@/types/api";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
@@ -192,7 +193,7 @@ export default function ProProfilePage() {
     }
 
     if (loading === true) {
-        return <p>Chargement du profil...</p>;
+        return <PageLoading kind="badge" label="Chargement de votre profil..." />;
     }
 
     if (loadError !== "") {
@@ -309,7 +310,7 @@ export default function ProProfilePage() {
                         <Button variant="secondary" fullWidth={false} onClick={closeModal} disabled={saving}>
                             Annuler
                         </Button>
-                        <Button type="submit" fullWidth={false} disabled={saving}>
+                        <Button type="submit" fullWidth={false} loading={saving}>
                             {saving ? "Enregistrement..." : "Enregistrer"}
                         </Button>
                     </div>

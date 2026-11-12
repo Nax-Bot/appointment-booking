@@ -1,7 +1,8 @@
 "use client"; // Pour utiliser les clients components
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { apiGet, apiPost, ApiError } from "@/lib/lib-front/api-client";
+import { startProgress, doneProgress } from "@/lib/lib-front/progress";
 import { AuthUser, RegisterInput } from "@/types/api";
 
 // Ce que le contexte met à disposition de toutes les pages
@@ -52,18 +53,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     // Les erreurs (ApiError) ne sont pas attrapées ici : c'est la page qui les affiche
     async function login(email: string, password: string): Promise<AuthUser> {
-        const loggedUser = await apiPost<AuthUser>("/api/auth/login", {
-            email,
-            password
-        });
-        setUser(loggedUser);
-        return loggedUser;
+        startProgress(); // la barre de chargement démarre au clic sur « Se connecter »
+        try {
+            const loggedUser = await apiPost<AuthUser>("/api/auth/login", {
+                email,
+                password
+            });
+            setUser(loggedUser);
+            return loggedUser;
+        } catch (error) {
+            doneProgress(true);
+            throw error;
+        }
     }
 
     async function register(data: RegisterInput): Promise<AuthUser> {
-        const registeredUser = await apiPost<AuthUser>("/api/auth/register", data);
-        setUser(registeredUser);
-        return registeredUser;
+        startProgress();
+        try {
+            const registeredUser = await apiPost<AuthUser>("/api/auth/register", data);
+            setUser(registeredUser);
+            return registeredUser;
+        } catch (error) {
+            doneProgress(true);
+            throw error;
+        }
     }
 
     async function logout(): Promise<void> {

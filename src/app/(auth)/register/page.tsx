@@ -3,7 +3,7 @@
 import { SubmitEvent, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/context/session-context";
-import { ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/lib-front/api-client";
 import { isEmailValid } from "@/lib/form-validation";
 import { Role, RegisterInput } from "@/types/api";
 import Input from "@/components/ui/Input";
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                 showStrength={true}
             />
 
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" loading={submitting}>
                 {submitting ? "Inscription..." : "Créer mon compte"}
             </Button>
 
