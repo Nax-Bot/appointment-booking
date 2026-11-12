@@ -4,128 +4,168 @@ import { Prisma } from "@/generated/prisma/client";
 // Les statuts possibles d'un rendez-vous (comme dans le schéma Prisma)
 export type AppointmentStatusValue = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
 
-// Données d'un nouveau rendez-vous, prêtes pour la base
+// Données d'un nouveau rendez-vous réservé par un client
 export interface NewAppointmentData {
-    clientId: number;
-    professionalId: number;
-    serviceId: number;
-    startDatetime: Date;
-    endDatetime: Date;
-    priceAtBooking: number;
-    notes: string | null;
+  clientId: number;
+  professionalId: number;
+  serviceId: number;
+  startDatetime: Date;
+  endDatetime: Date;
+  priceAtBooking: number;
+  notes: string | null;
+}
+
+// Données d'un rendez-vous ajouté à la main par le professionnel (client sans compte)
+export interface NewManualAppointmentData {
+  professionalId: number;
+  serviceId: number;
+  startDatetime: Date;
+  endDatetime: Date;
+  priceAtBooking: number;
+  status: AppointmentStatusValue;
+  guestName: string;
+  guestPhone: string | null;
+  notes: string | null;
 }
 
 export class AppointmentRepository {
-    // Les rendez-vous non annulés d'un professionnel qui chevauchent la période donnée
-    // (deux périodes qui se touchent ne se chevauchent pas)
-    async findOverlapping(professionalId: number, start: Date, end: Date, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
-
-        return client.appointment.findMany({
-            where: {
-                professionalId: professionalId,
-                status: { not: "CANCELLED" },
-                startDatetime: { lt: end },
-                endDatetime: { gt: start },
-            },
-        });
+  // Les rendez-vous non annulés d'un professionnel qui chevauchent la période donnée
+  // (deux périodes qui se touchent ne se chevauchent pas)
+  async findOverlapping(professionalId: number, start: Date, end: Date, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
 
-    // Crée un rendez-vous (le statut vaut PENDING par défaut)
-    async create(data: NewAppointmentData, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
+    return client.appointment.findMany({
+      where: {
+        professionalId: professionalId,
+        status: { not: "CANCELLED" },
+        startDatetime: { lt: end },
+        endDatetime: { gt: start },
+      },
+    });
+  }
 
-        return client.appointment.create({
-            data: {
-                clientId: data.clientId,
-                professionalId: data.professionalId,
-                serviceId: data.serviceId,
-                startDatetime: data.startDatetime,
-                endDatetime: data.endDatetime,
-                priceAtBooking: data.priceAtBooking,
-                notes: data.notes,
-            },
-        });
+  // Crée un rendez-vous réservé par un client (le statut vaut PENDING par défaut)
+  async create(data: NewAppointmentData, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
 
-    // Les rendez-vous d'un client, du plus ancien au plus récent (filtre de statut facultatif)
-    async findForClient(clientId: number, status?: AppointmentStatusValue, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
+    return client.appointment.create({
+      data: {
+        clientId: data.clientId,
+        professionalId: data.professionalId,
+        serviceId: data.serviceId,
+        startDatetime: data.startDatetime,
+        endDatetime: data.endDatetime,
+        priceAtBooking: data.priceAtBooking,
+        notes: data.notes,
+      },
+    });
+  }
 
-        return client.appointment.findMany({
-            where: { clientId: clientId, status: status },
-            include: {
-                service: { select: { id: true, name: true } },
-                client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
-                professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
-            },
-            orderBy: { startDatetime: "asc" },
-        });
+  // Crée un rendez-vous ajouté à la main : pas de clientId, mais le nom (et le téléphone) de l'invité
+  async createManual(data: NewManualAppointmentData, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
 
-    // Les rendez-vous d'un professionnel, du plus ancien au plus récent (filtre de statut facultatif)
-    async findForProfessional(professionalId: number, status?: AppointmentStatusValue, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
+    return client.appointment.create({
+      data: {
+        professionalId: data.professionalId,
+        serviceId: data.serviceId,
+        startDatetime: data.startDatetime,
+        endDatetime: data.endDatetime,
+        priceAtBooking: data.priceAtBooking,
+        status: data.status,
+        guestName: data.guestName,
+        guestPhone: data.guestPhone,
+        notes: data.notes,
+      },
+      include: {
+        service: { select: { id: true, name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
+        professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
+      },
+    });
+  }
 
-        return client.appointment.findMany({
-            where: { professionalId: professionalId, status: status },
-            include: {
-                service: { select: { id: true, name: true } },
-                client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
-                professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
-            },
-            orderBy: { startDatetime: "asc" },
-        });
+  // Les rendez-vous d'un client, du plus ancien au plus récent (filtre de statut facultatif)
+  async findForClient(clientId: number, status?: AppointmentStatusValue, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
 
-    // Un rendez-vous avec son service, son client et son professionnel (null s'il n'existe pas)
-    async findById(id: number, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
+    return client.appointment.findMany({
+      where: { clientId: clientId, status: status },
+      include: {
+        service: { select: { id: true, name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
+        professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
+      },
+      orderBy: { startDatetime: "asc" },
+    });
+  }
 
-        return client.appointment.findUnique({
-            where: { id: id },
-            include: {
-                service: { select: { id: true, name: true } },
-                client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
-                professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
-            },
-        });
+  // Les rendez-vous d'un professionnel, du plus ancien au plus récent (filtre de statut facultatif)
+  async findForProfessional(professionalId: number, status?: AppointmentStatusValue, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
 
-    // Passe un rendez-vous au statut CANCELLED, avec la date et la raison de l'annulation
-    async cancel(id: number, cancelledAt: Date, reason: string | null, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
+    return client.appointment.findMany({
+      where: { professionalId: professionalId, status: status },
+      include: {
+        service: { select: { id: true, name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
+        professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
+      },
+      orderBy: { startDatetime: "asc" },
+    });
+  }
 
-        return client.appointment.update({
-            where: { id: id },
-            data: {
-                status: "CANCELLED",
-                cancelledAt: cancelledAt,
-                cancellationReason: reason,
-            },
-            include: {
-                service: { select: { id: true, name: true } },
-                client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
-                professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
-            },
-        });
+  // Un rendez-vous avec son service, son client et son professionnel (null s'il n'existe pas)
+  async findById(id: number, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
+
+    return client.appointment.findUnique({
+      where: { id: id },
+      include: {
+        service: { select: { id: true, name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
+        professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
+      },
+    });
+  }
+
+  // Passe un rendez-vous au statut CANCELLED, avec la date et la raison de l'annulation
+  async cancel(id: number, cancelledAt: Date, reason: string | null, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    return client.appointment.update({
+      where: { id: id },
+      data: {
+        status: "CANCELLED",
+        cancelledAt: cancelledAt,
+        cancellationReason: reason,
+      },
+      include: {
+        service: { select: { id: true, name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, phoneNumber: true } } } },
+        professional: { select: { specialty: true, user: { select: { firstName: true, lastName: true } } } },
+      },
+    });
+  }
 }
