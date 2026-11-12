@@ -15,7 +15,16 @@ export interface CreateAppointmentInput {
     notes?: string | null;
 }
 
-// Ce que l'on renvoie à la création (dates en UTC)
+// Données reçues pour qu'un professionnel ajoute un rendez-vous à la main
+export interface CreateManualAppointmentInput {
+    serviceId: number;
+    startDatetime: string;
+    guestName: string;
+    guestPhone?: string | null;
+    notes?: string | null;
+}
+
+// Ce que l'on renvoie à la création d'une réservation (dates en UTC)
 export interface AppointmentItem {
     id: number;
     startDatetime: string;
@@ -24,12 +33,14 @@ export interface AppointmentItem {
     notes: string | null;
     location: string | null;
     priceAtBooking: number | null;
-    clientId: number;
+    clientId: number | null;
     professionalId: number;
     serviceId: number;
 }
 
-// Ce que l'on renvoie à la lecture : le rendez-vous avec son service, son professionnel et son client
+// Ce que l'on renvoie à la lecture : le rendez-vous avec son service, son professionnel et son client.
+// Pour un client avec compte : "client" est rempli et "guest" vaut null.
+// Pour un client sans compte (invité) : "client" vaut null et "guest" est rempli.
 export interface AppointmentDetail {
     id: number;
     startDatetime: string;
@@ -42,7 +53,8 @@ export interface AppointmentDetail {
     cancellationReason: string | null;
     service: { id: number; name: string };
     professional: { userId: number; firstName: string; lastName: string; specialty: string | null };
-    client: { userId: number; firstName: string; lastName: string; phoneNumber: string | null };
+    client: { userId: number; firstName: string; lastName: string; phoneNumber: string | null } | null;
+    guest: { name: string; phoneNumber: string | null } | null;
 }
 
 // Forme d'un rendez-vous tel que le repository le renvoie après sa création
@@ -54,7 +66,7 @@ interface AppointmentRow {
     notes: string | null;
     location: string | null;
     priceAtBooking: object | null;
-    clientId: number;
+    clientId: number | null;
     professionalId: number;
     serviceId: number;
 }
@@ -70,10 +82,12 @@ interface AppointmentDetailRow {
     priceAtBooking: object | null;
     cancelledAt: Date | null;
     cancellationReason: string | null;
-    clientId: number;
+    guestName: string | null;
+    guestPhone: string | null;
+    clientId: number | null;
     professionalId: number;
     service: { id: number; name: string };
-    client: { user: { firstName: string; lastName: string; phoneNumber: string | null } };
+    client: { user: { firstName: string; lastName: string; phoneNumber: string | null } } | null;
     professional: { specialty: string | null; user: { firstName: string; lastName: string } };
 }
 
@@ -176,6 +190,72 @@ export class AppointmentService {
         return this.toItem(row);
     }
 
+    // Un professionnel ajoute un rendez-vous à la main pour un client sans compte (un invité).
+    // Il peut le placer hors de ses horaires, pendant une absence ou dans le passé :
+    // les seules règles qui restent sont le service proposé, la minute pile et le chevauchement.
+    async createManual(professionalId: number, input: CreateManualAppointmentInput): Promise<AppointmentDetail> {
+        // Règle 1 : le professionnel existe encore
+        const professional = await this.professionalRepository.findById(professionalId);
+        if (!professional) {
+            throw new NotFoundError("Professionnel introuvable");
+        }
+
+        // Règle 2 : il propose ce service
+        const offer = await this.offerRepository.findOne(professionalId, input.serviceId);
+        if (!offer) {
+            throw new NotFoundError("Ce service n'est pas proposé par ce professionnel");
+        }
+
+        // Règle 3 : le début est à une minute pile (pas de règle sur le futur : le passé est permis)
+        const start = new Date(input.startDatetime);
+        if (start.getUTCSeconds() !== 0 || start.getUTCMilliseconds() !== 0) {
+            throw new ValidationError("Le rendez-vous doit commencer à une minute pile (secondes à 00)", []);
+        }
+
+        // Durée et prix effectifs : ceux de l'offre s'ils existent, sinon ceux du catalogue
+        let duration = offer.service.duration;
+        if (offer.customDuration !== null) {
+            duration = offer.customDuration;
+        }
+
+        let price = Number(offer.service.price);
+        if (offer.customPrice !== null) {
+            price = Number(offer.customPrice);
+        }
+
+        const end = new Date(start.getTime() + duration * 60 * 1000);
+
+        // Règle 4 : pas d'autre rendez-vous (non annulé) sur la période
+        const others = await this.appointmentRepository.findOverlapping(professionalId, start, end);
+        if (others.length > 0) {
+            throw new ConflictError("Ce créneau est déjà réservé");
+        }
+
+        let guestPhone: string | null = null;
+        if (input.guestPhone !== undefined && input.guestPhone !== null) {
+            guestPhone = input.guestPhone;
+        }
+
+        let notes: string | null = null;
+        if (input.notes !== undefined && input.notes !== null) {
+            notes = input.notes;
+        }
+
+        // C'est le professionnel qui a décidé : le rendez-vous est confirmé tout de suite
+        const row = await this.appointmentRepository.createManual({
+            professionalId: professionalId,
+            serviceId: input.serviceId,
+            startDatetime: start,
+            endDatetime: end,
+            priceAtBooking: price,
+            status: "CONFIRMED",
+            guestName: input.guestName,
+            guestPhone: guestPhone,
+            notes: notes,
+        });
+        return this.toDetail(row);
+    }
+
     // Liste mes rendez-vous : ceux que j'ai réservés (client) ou reçus (professionnel)
     async listMine(userId: number, role: Role, status: AppointmentStatusValue | undefined): Promise<AppointmentDetail[]> {
         if (role === "CLIENT") {
@@ -235,7 +315,8 @@ export class AppointmentService {
         return this.toDetail(updated);
     }
 
-    // Une personne est concernée par un rendez-vous si elle en est le client ou le professionnel
+    // Une personne est concernée par un rendez-vous si elle en est le client ou le professionnel.
+    // Un rendez-vous d'invité n'a pas de clientId : seul son professionnel en fait partie.
     private isParticipant(row: AppointmentDetailRow, userId: number, role: Role): boolean {
         if (role === "CLIENT" && row.clientId === userId) {
             return true;
@@ -339,6 +420,23 @@ export class AppointmentService {
             cancelledAt = row.cancelledAt.toISOString();
         }
 
+        // Un client avec compte : "client" est rempli, "guest" vaut null
+        let client: AppointmentDetail["client"] = null;
+        if (row.client !== null && row.clientId !== null) {
+            client = {
+                userId: row.clientId,
+                firstName: row.client.user.firstName,
+                lastName: row.client.user.lastName,
+                phoneNumber: row.client.user.phoneNumber,
+            };
+        }
+
+        // Un invité (pas de compte) : "client" vaut null, "guest" est rempli
+        let guest: AppointmentDetail["guest"] = null;
+        if (client === null && row.guestName !== null) {
+            guest = { name: row.guestName, phoneNumber: row.guestPhone };
+        }
+
         return {
             id: row.id,
             startDatetime: row.startDatetime.toISOString(),
@@ -356,12 +454,8 @@ export class AppointmentService {
                 lastName: row.professional.user.lastName,
                 specialty: row.professional.specialty,
             },
-            client: {
-                userId: row.clientId,
-                firstName: row.client.user.firstName,
-                lastName: row.client.user.lastName,
-                phoneNumber: row.client.user.phoneNumber,
-            },
+            client: client,
+            guest: guest,
         };
     }
 }
