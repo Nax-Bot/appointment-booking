@@ -44,3 +44,25 @@ export const loginSchema = z.object({
         .min(1, "L'email est obligatoire"),
     password: z.string().min(1, "Le mot de passe est obligatoire"),
 });
+
+// Données attendues pour vérifier un email : l'email et le code à 6 chiffres
+export const verifyEmailSchema = z.object({
+    email: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .min(1, "L'email est obligatoire"),
+    code: z
+        .string({ message: "Le code est obligatoire" })
+        .trim()
+        .regex(/^[0-9]{6}$/, "Le code doit contenir 6 chiffres"),
+});
+
+// Données attendues pour demander un nouveau code : seulement l'email
+export const resendCodeSchema = z.object({
+    email: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .min(1, "L'email est obligatoire"),
+});
