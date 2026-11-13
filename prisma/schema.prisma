@@ -36,20 +36,35 @@ enum PaymentMethod {
 // Tout les types doit commencé par une majuscule
 // @db => /> type de donnée accepté par la base de données
 model User {
-  userId       Int      @id @default(autoincrement()) @map("user_id")
-  lastName     String   @map("last_name") @db.VarChar(100)
-  firstName    String   @map("first_name") @db.VarChar(100)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  phoneNumber  String?  @map("phone_number") @db.VarChar(30)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  userId          Int       @id @default(autoincrement()) @map("user_id")
+  lastName        String    @map("last_name") @db.VarChar(100)
+  firstName       String    @map("first_name") @db.VarChar(100)
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  phoneNumber     String?   @map("phone_number") @db.VarChar(30)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Spécialisation : un utilisateur est soit client, soit professionnel
-  client       Client?
-  professional Professional?
+  client            Client?
+  professional      Professional?
+  emailVerification EmailVerification?
 
   @@map("users")
+}
+
+// Le code de vérification en cours d'un utilisateur (au plus un à la fois)
+model EmailVerification {
+  userId     Int      @id @map("user_id")
+  codeHash   String   @map("code_hash") @db.VarChar(64)
+  expiresAt  DateTime @map("expires_at")
+  attempts   Int      @default(0)
+  lastSentAt DateTime @map("last_sent_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("email_verifications")
 }
 
 model Client {
