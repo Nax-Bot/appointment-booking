@@ -44,10 +44,19 @@ export class UnauthorizedError extends AppError {
   }
 }
 
-// 403 : connecté mais pas autorisé (mauvais rôle)
+// 403 : connecté mais pas autorisé (mauvais rôle), ou compte pas encore vérifié.
+// Les détails sont facultatifs : ils permettent au frontend de reconnaître le cas.
 export class ForbiddenError extends AppError {
-  constructor(message: string) {
-    super(message, 403, []);
+  constructor(message: string, details: string[] = []) {
+    super(message, 403, details);
     this.name = "ForbiddenError";
+  }
+}
+
+// 429 : trop de demandes ou trop d'essais
+export class TooManyRequestsError extends AppError {
+  constructor(message: string) {
+    super(message, 429, []);
+    this.name = "TooManyRequestsError";
   }
 }
