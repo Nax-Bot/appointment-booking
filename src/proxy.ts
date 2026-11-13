@@ -10,8 +10,11 @@ const PUBLIC_PATHS = [
     "/api/auth/register",
     "/api/auth/login",
     "/api/auth/logout",
+    "/api/auth/verify-email",
+    "/api/auth/resend-code",
 ];
 
+// Avec Next.js 15 ou moins : renomme cette fonction "middleware" (et le fichier middleware.ts)
 export async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
