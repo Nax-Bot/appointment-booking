@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarOff, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { CalendarOff, CalendarPlus, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { apiDelete, apiGet, ApiError } from "@/lib/lib-front/api-client";
 import { Availability, Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
@@ -17,6 +17,7 @@ import { describeAbsence } from "@/lib/lib-front/unavailability-format";
 import {
     CalendarView,
     absencesOnDate,
+    clientName,
     availabilitiesOnDate,
     appointmentsOnDate,
     getCalendarTitle,
@@ -33,6 +34,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import AvailabilityModal, { AvailabilityInitial, SaveResult } from "@/components/availability/AvailabilityModal";
 import UnavailabilityModal, { UnavailabilityInitial } from "@/components/unavailability/UnavailabilityModal";
+import NewAppointmentModal from "@/components/calendar/NewAppointmentModal";
 import CancelAppointmentModal from "@/components/appointments/CancelAppointmentModal";
 import { TONES, ToneKey } from "@/lib/lib-front/calendar-theme";
 import TimeGrid from "@/components/calendar/TimeGrid";
@@ -77,6 +79,7 @@ export default function ProCalendar() {
 
     // Les fenêtres
     const [slot, setSlot] = useState<{ date: string; minutes: number } | null>(null);
+    const [newAppointment, setNewAppointment] = useState<{ date: string; minutes: number | null } | null>(null);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetail | null>(null);
     const [cancelling, setCancelling] = useState<AppointmentDetail | null>(null);
     const [selectedAbsence, setSelectedAbsence] = useState<Unavailability | null>(null);
@@ -187,6 +190,12 @@ export default function ProCalendar() {
     }
 
     // -------- Ouvrir les formulaires --------
+    function openNewAppointment(date: string, minutes: number | null) {
+        clearMessages();
+        setSlot(null);
+        setNewAppointment({ date: date, minutes: minutes });
+    }
+
     function openAvailabilityForm(date: string, minutes: number | null) {
         clearMessages();
         setSlot(null);
@@ -269,6 +278,15 @@ export default function ProCalendar() {
         setAbsenceForm(null);
         await reloadAll();
         setSuccessMessage(message);
+    }
+
+    async function handleAppointmentCreated(created: AppointmentDetail) {
+        const date = toLocalMoment(new Date(created.startDatetime)).dateText;
+        setNewAppointment(null);
+        await reloadAll();
+        // On se place sur le jour du rendez-vous pour le voir tout de suite
+        setAnchorDate(date);
+        setSuccessMessage("Rendez-vous ajouté pour " + clientName(created));
     }
 
     async function handleCancelled() {
@@ -415,10 +433,16 @@ export default function ProCalendar() {
                         Absence
                     </span>
                 </Button>
-                <Button fullWidth={false} onClick={() => openAvailabilityForm(anchorDate, null)}>
+                <Button variant="secondary" fullWidth={false} onClick={() => openAvailabilityForm(anchorDate, null)}>
                     <span className="flex items-center gap-1.5">
                         <Plus className="h-4 w-4" />
                         Disponibilité
+                    </span>
+                </Button>
+                <Button fullWidth={false} onClick={() => openNewAppointment(anchorDate, null)}>
+                    <span className="flex items-center gap-1.5">
+                        <CalendarPlus className="h-4 w-4" />
+                        Rendez-vous
                     </span>
                 </Button>
             </div>
@@ -597,7 +621,7 @@ export default function ProCalendar() {
             </section>
 
             <p className="mt-3 text-xs text-muted">
-                Cliquez sur un créneau vide pour ajouter une disponibilité ou une absence, ou sur un rendez-vous
+                Cliquez sur un créneau vide pour ajouter un rendez-vous, une disponibilité ou une absence, ou sur un rendez-vous
                 ou une absence pour le gérer.
             </p>
             {/* ---- Fenêtres ---- */}
@@ -606,11 +630,24 @@ export default function ProCalendar() {
                     date={slot.date}
                     minutes={slot.minutes}
                     dayGroups={groupsOnDate(slot.date)}
+                    onAddAppointment={() => openNewAppointment(slot.date, slot.minutes)}
                     onAddAvailability={() => openAvailabilityForm(slot.date, slot.minutes)}
                     onAddAbsence={() => openAbsenceForm(slot.date, slot.minutes)}
                     onEditGroup={openEditGroup}
                     onRemoveGroup={openRemoveGroup}
                     onClose={() => setSlot(null)}
+                />
+            )}
+
+            {newAppointment !== null && (
+                <NewAppointmentModal
+                    date={newAppointment.date}
+                    minutes={newAppointment.minutes}
+                    availabilities={availabilities}
+                    absences={absences}
+                    appointments={appointments}
+                    onClose={() => setNewAppointment(null)}
+                    onCreated={handleAppointmentCreated}
                 />
             )}
 

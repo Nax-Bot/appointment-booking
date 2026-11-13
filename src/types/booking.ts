@@ -54,7 +54,7 @@ export interface AppointmentItem {
     notes: string | null;
     location: string | null;
     priceAtBooking: number | null;
-    clientId: number;
+    clientId: number | null; // null = rendez-vous ajouté à la main pour un invité
     professionalId: number;
     serviceId: number;
 }
@@ -79,12 +79,28 @@ export interface AppointmentDetail {
         lastName: string;
         specialty: string | null;
     };
+    // Client avec compte : "client" est rempli et "guest" vaut null.
+    // Invité (ajouté à la main par le professionnel) : "client" vaut null et "guest" est rempli.
     client: {
         userId: number;
         firstName: string;
         lastName: string;
         phoneNumber: string | null;
-    };
+    } | null;
+    guest: {
+        name: string;
+        phoneNumber: string | null;
+    } | null;
+}
+
+// Les données envoyées par le professionnel pour ajouter un rendez-vous
+// (POST /api/professionals/me/appointments)
+export interface CreateManualAppointmentInput {
+    serviceId: number;
+    startDatetime: string;
+    guestName: string;
+    guestPhone: string | null;
+    notes: string | null;
 }
 
 // Les données envoyées pour annuler (POST /api/appointments/[id]/cancel)

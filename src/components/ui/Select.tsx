@@ -9,6 +9,10 @@ import { Check, ChevronDown } from "lucide-react";
 interface SelectOption {
     value: string;
     label: string;
+    // Facultatifs : une ligne de détail sous le nom, et une pastille à droite (ex. le prix).
+    // Quand "detail" est donné, la ligne s'affiche en version riche (initiale + détail + pastille).
+    detail?: string;
+    badge?: string;
 }
 
 interface SelectProps {
@@ -16,9 +20,10 @@ interface SelectProps {
     value: string;
     onChange: (value: string) => void;
     options: SelectOption[];
+    placeholder?: string; // texte affiché tant qu'aucun choix n'est fait
 }
 
-export default function Select({ label, value, onChange, options }: SelectProps) {
+export default function Select({ label, value, onChange, options, placeholder = "" }: SelectProps) {
     const [open, setOpen] = useState(false); // la liste est-elle ouverte ?
     const containerRef = useRef<HTMLDivElement>(null); // pour savoir où l'on clique
 
@@ -88,7 +93,11 @@ export default function Select({ label, value, onChange, options }: SelectProps)
                 aria-expanded={open}
                 className="flex w-full items-center justify-between rounded-lg border border-line bg-white px-3 py-2 text-left text-ink focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             >
-                <span>{selectedLabel}</span>
+                {selectedLabel !== "" ? (
+                    <span className="min-w-0 truncate">{selectedLabel}</span>
+                ) : (
+                    <span className="text-muted/70">{placeholder}</span>
+                )}
                 {/* Petite flèche, qui se retourne quand la liste est ouverte */}
                 <ChevronDown
                     className={
@@ -101,7 +110,7 @@ export default function Select({ label, value, onChange, options }: SelectProps)
             {open && (
                 <ul
                     role="listbox"
-                    className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg"
+                    className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-line bg-white py-1 shadow-lg"
                 >
                     {/* map = une ligne par choix de la liste */}
                     {options.map((option) => {
@@ -119,11 +128,44 @@ export default function Select({ label, value, onChange, options }: SelectProps)
                                 aria-selected={isSelected}
                                 onClick={() => handleChoose(option.value)}
                                 className={
-                                    "flex cursor-pointer items-center justify-between px-3 py-2 " + optionClass
+                                    "flex cursor-pointer items-center gap-3 px-3 transition-colors " +
+                                    (option.detail !== undefined ? "py-2.5 " : "py-2 ") +
+                                    optionClass
                                 }
                             >
-                                <span>{option.label}</span>
-                                {isSelected && <Check className="h-4 w-4" strokeWidth={3} />}
+                                {option.detail !== undefined && (
+                                    <span
+                                        className={
+                                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold " +
+                                            (isSelected ? "bg-primary text-white" : "bg-tint text-primary")
+                                        }
+                                    >
+                                        {option.label.charAt(0).toUpperCase()}
+                                    </span>
+                                )}
+                                <span className="min-w-0 flex-1">
+                                    <span className="block truncate" title={option.label}>
+                                        {option.label}
+                                    </span>
+                                    {option.detail !== undefined && (
+                                        <span className="block truncate text-xs font-normal text-muted">
+                                            {option.detail}
+                                        </span>
+                                    )}
+                                </span>
+                                {option.badge !== undefined && (
+                                    <span
+                                        className={
+                                            "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums " +
+                                            (isSelected ? "bg-primary text-white" : "bg-tint text-primary")
+                                        }
+                                    >
+                                        {option.badge}
+                                    </span>
+                                )}
+                                {isSelected && option.badge === undefined && (
+                                    <Check className="h-4 w-4 shrink-0" strokeWidth={3} />
+                                )}
                             </li>
                         );
                     })}

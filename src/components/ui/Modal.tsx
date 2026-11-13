@@ -14,6 +14,8 @@ interface ModalProps {
     onClose: () => void;
     children: ReactNode;
     allowOverflow?: boolean;
+    // wide = fenêtre plus large (formulaires en deux colonnes)
+    wide?: boolean;
 }
 
 export default function Modal({
@@ -22,6 +24,7 @@ export default function Modal({
     onClose,
     children,
     allowOverflow = false,
+    wide = false,
 }: ModalProps) {
     // La touche Échap ferme la fenêtre (seulement quand elle est ouverte)
     useEffect(() => {
@@ -41,6 +44,11 @@ export default function Modal({
         return null;
     }
 
+    let widthClass = "max-w-lg";
+    if (wide) {
+        widthClass = "max-w-3xl";
+    }
+
     let scrollClass = "max-h-[90vh] overflow-y-auto";
     if (allowOverflow) {
         scrollClass = "";
@@ -53,7 +61,7 @@ export default function Modal({
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}
-                className={"animate-pop-in w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl " + scrollClass}
+                className={"animate-pop-in w-full rounded-2xl bg-white p-6 shadow-xl " + widthClass + " " + scrollClass}
             >
                 <div className="mb-5 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-ink">{title}</h2>

@@ -257,5 +257,22 @@ export function layoutLanes<T>(segments: DaySegment<T>[]): LaneSegment<T>[] {
 
 // Le nom à afficher sur un rendez-vous : « Marie Rakoto »
 export function clientName(item: AppointmentDetail): string {
-    return item.client.firstName + " " + item.client.lastName;
+    if (item.client !== null) {
+        return item.client.firstName + " " + item.client.lastName;
+    }
+    if (item.guest !== null) {
+        return item.guest.name;
+    }
+    return "Client";
+}
+
+// Le téléphone du client (avec compte ou invité), ou null
+export function clientPhone(item: AppointmentDetail): string | null {
+    if (item.client !== null) {
+        return item.client.phoneNumber;
+    }
+    if (item.guest !== null) {
+        return item.guest.phoneNumber;
+    }
+    return null;
 }

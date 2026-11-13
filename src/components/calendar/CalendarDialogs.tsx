@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarOff, CalendarPlus, Pencil, Phone, Trash2, Banknote, Clock } from "lucide-react";
+import { CalendarOff, CalendarPlus, CalendarClock, Pencil, Phone, Trash2, Banknote, Clock } from "lucide-react";
 import { Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
 import { AvailabilityGroup, describeGroup } from "@/lib/lib-front/availability-groups";
@@ -9,7 +9,7 @@ import { getStatusLabel } from "@/lib/lib-front/booking-format";
 import { TONES, toneOf } from "@/lib/lib-front/calendar-theme";
 import StatusIcon from "@/components/calendar/StatusIcon";
 import { describeAbsence, formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { getShortLongDate, minutesToClock } from "@/lib/lib-front/calendar-utils";
+import { clientName, clientPhone, getShortLongDate, minutesToClock } from "@/lib/lib-front/calendar-utils";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 
@@ -21,6 +21,7 @@ interface SlotDialogProps {
     minutes: number;
     // Les plages horaires déjà prévues ce jour-là (une entrée par carte de la page « Mes horaires »)
     dayGroups: AvailabilityGroup[];
+    onAddAppointment: () => void;
     onAddAvailability: () => void;
     onAddAbsence: () => void;
     onEditGroup: (group: AvailabilityGroup) => void;
@@ -32,6 +33,7 @@ export function SlotDialog({
     date,
     minutes,
     dayGroups,
+    onAddAppointment,
     onAddAvailability,
     onAddAbsence,
     onEditGroup,
@@ -43,6 +45,22 @@ export function SlotDialog({
             <p className="mb-3 text-sm text-muted">Que voulez-vous ajouter à cet endroit ?</p>
 
             <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                    type="button"
+                    onClick={onAddAppointment}
+                    className="group flex items-center gap-3 rounded-xl border border-line bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-tint/40 hover:shadow-[0_6px_16px_rgba(17,24,39,0.10)] sm:col-span-2"
+                >
+                    <span className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " + TONES.CONFIRMED.block}>
+                        <CalendarClock className="h-5 w-5" />
+                    </span>
+                    <span>
+                        <span className="block font-semibold text-ink">Un rendez-vous</span>
+                        <span className="mt-0.5 block text-xs text-muted">
+                            Pour un client sans compte (téléphone, sur place…).
+                        </span>
+                    </span>
+                </button>
+
                 <button
                     type="button"
                     onClick={onAddAvailability}
@@ -146,12 +164,17 @@ export function AppointmentDialog({ item, canCancel, onCancel, onClose }: Appoin
             <p className="text-lg font-semibold text-ink">{item.service.name}</p>
 
             <div className="mt-2 text-sm text-ink">
-                <p>
-                    Client : {item.client.firstName} {item.client.lastName}
+                <p className="flex flex-wrap items-center gap-2">
+                    <span>Client : {clientName(item)}</span>
+                    {item.guest !== null && (
+                        <span className="rounded-full bg-page px-2 py-0.5 text-xs font-medium text-muted ring-1 ring-line ring-inset">
+                            Sans compte
+                        </span>
+                    )}
                 </p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-muted">
                     <Phone className="h-4 w-4" />
-                    {item.client.phoneNumber !== null ? item.client.phoneNumber : "Téléphone non renseigné"}
+                    {clientPhone(item) !== null ? clientPhone(item) : "Téléphone non renseigné"}
                 </p>
             </div>
 

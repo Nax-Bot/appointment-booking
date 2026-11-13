@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/lib-front/format";
 import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
 import { getStatusLabel, getStatusStyle } from "@/lib/lib-front/booking-format";
 import { getInitials } from "@/lib/lib-front/text-helpers";
+import { clientName, clientPhone } from "@/lib/lib-front/calendar-utils";
 
 // Une carte de rendez-vous.
 // role = le rôle de la personne connectée : il décide de qui on montre (le professionnel ou le client).
@@ -84,14 +85,17 @@ export default function AppointmentCard({
 
             {/* Le professionnel voit son client (le client a sa propre carte, plus haut) */}
             <div className="text-sm text-ink">
-                <p>
-                    Client : {item.client.firstName} {item.client.lastName}
+                <p className="flex flex-wrap items-center gap-2">
+                    <span>Client : {clientName(item)}</span>
+                    {item.guest !== null && (
+                        <span className="rounded-full bg-page px-2 py-0.5 text-xs font-medium text-muted ring-1 ring-line ring-inset">
+                            Sans compte
+                        </span>
+                    )}
                 </p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-muted">
                     <Phone className="h-4 w-4" />
-                    {item.client.phoneNumber !== null
-                        ? item.client.phoneNumber
-                        : "Téléphone non renseigné"}
+                    {clientPhone(item) !== null ? clientPhone(item) : "Téléphone non renseigné"}
                 </p>
             </div>
 
