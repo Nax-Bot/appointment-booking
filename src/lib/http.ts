@@ -10,10 +10,16 @@ export function jsonCreated(data: unknown) {
   return NextResponse.json(data, { status: 201 });
 }
 
-// Réponse d'erreur : un message, un code HTTP et la liste des détails
-export function jsonError(message: string, statusCode: number, details: string[]) {
+// Réponse d'erreur : un message, un code HTTP et la liste des détails.
+// Des en-têtes peuvent être ajoutés (par exemple Retry-After pour une erreur 429).
+export function jsonError(
+  message: string,
+  statusCode: number,
+  details: string[],
+  headers?: Record<string, string>
+) {
   return NextResponse.json(
     { error: message, details: details },
-    { status: statusCode }
+    { status: statusCode, headers: headers }
   );
 }
