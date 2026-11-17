@@ -41,7 +41,8 @@ export const loginSchema = z.object({
         .string()
         .trim()
         .toLowerCase()
-        .min(1, "L'email est obligatoire"),
+        .min(1, "L'email est obligatoire")
+        .max(255, "L'email est trop long"),
     password: z.string().min(1, "Le mot de passe est obligatoire"),
 });
 
