@@ -195,3 +195,14 @@ model Unavailability {
   @@index([professionalId, startDatetime])
   @@map("unavailabilities")
 }
+
+// Les compteurs de la limitation de tentatives (connexion, et plus tard d'autres routes)
+model RateLimit {
+  limitKey     String    @id @map("limit_key") @db.VarChar(320)
+  count        Int       @default(0)
+  windowStart  DateTime  @map("window_start")
+  blockedUntil DateTime? @map("blocked_until")
+
+  @@index([windowStart])
+  @@map("rate_limits")
+}
