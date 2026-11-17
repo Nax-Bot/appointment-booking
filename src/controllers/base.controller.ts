@@ -1,5 +1,11 @@
 import { ZodType } from "zod";
-import { AppError, ValidationError, UnauthorizedError, ForbiddenError } from "@/lib/errors";
+import {
+  AppError,
+  ValidationError,
+  UnauthorizedError,
+  ForbiddenError,
+  TooManyRequestsError,
+} from "@/lib/errors";
 import { jsonOk, jsonCreated, jsonError } from "@/lib/http";
 import { readSession } from "@/lib/session";
 import { Role, SessionData } from "@/lib/auth";
@@ -48,7 +54,31 @@ export class BaseController {
 
     return Number(result.data);
   }
-  // -------------------- VERIFICATION DE SESSION ----------- //
+
+  // Lit l'adresse IP du client, ou null si on ne peut pas la lire de façon raisonnable.
+  // ATTENTION : l'en-tête x-forwarded-for n'est fiable que derrière un serveur de confiance
+  // (l'hébergeur en production). Sans lui, un client peut écrire n'importe quoi.
+  protected getClientIp(req: Request): string | null {
+    const forwarded = req.headers.get("x-forwarded-for");
+    if (forwarded !== null) {
+      // Il peut y avoir plusieurs adresses séparées par des virgules : la première est celle du client
+      const first = forwarded.split(",")[0].trim();
+      if (first !== "" && first.length <= 64) {
+        return first;
+      }
+    }
+
+    const realIp = req.headers.get("x-real-ip");
+    if (realIp !== null) {
+      const cleaned = realIp.trim();
+      if (cleaned !== "" && cleaned.length <= 64) {
+        return cleaned;
+      }
+    }
+
+    return null;
+  }
+
   // Exige une personne connectée. Si un rôle est demandé, exige aussi ce rôle.
   // Renvoie la session (userId et rôle) pour que le controller l'utilise.
   protected async requireSession(role?: Role): Promise<SessionData> {
@@ -77,10 +107,17 @@ export class BaseController {
 
   // Transforme une erreur en réponse HTTP.
   // - AppError (ou sous-classe) : on utilise son code et son message
+  //   (et l'en-tête Retry-After pour une erreur 429 qui connaît son temps d'attente)
   // - autre erreur : on cache les détails et on renvoie 500
   protected handleError(error: unknown) {
     if (error instanceof AppError) {
-      return jsonError(error.message, error.statusCode, error.details);
+      let headers: Record<string, string> | undefined = undefined;
+
+      if (error instanceof TooManyRequestsError && error.retryAfterSeconds !== null) {
+        headers = { "Retry-After": String(error.retryAfterSeconds) };
+      }
+
+      return jsonError(error.message, error.statusCode, error.details, headers);
     }
 
     console.error(error);
