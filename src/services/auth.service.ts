@@ -100,8 +100,10 @@ export class AuthService {
         const existingUser = await this.userRepository.findByEmail(data.email);
 
         if (existingUser) {
-            // Un compte vérifié : l'email est vraiment pris
-            if (existingUser.emailVerifiedAt !== null) {
+            // Seul un compte en attente de vérification (avec un code en cours) peut être remplacé.
+            // Tout autre compte est considéré comme vraiment pris, même si sa date de vérification est vide :
+            // cela protège les comptes créés avant la vérification d'email.
+            if (existingUser.emailVerifiedAt !== null || existingUser.emailVerification === null) {
                 throw new ConflictError("Cet email est deja utilisé");
             }
 

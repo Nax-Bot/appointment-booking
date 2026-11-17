@@ -21,6 +21,15 @@ export interface RegisterInput {
   phoneNumber?: string;
 }
 
+// Ce que renvoie l'inscription (POST /api/auth/register) :
+// - verificationRequired = true : un code a été envoyé par e-mail, personne n'est encore connecté (user = null)
+// - verificationRequired = false : le compte est déjà vérifié et la session est ouverte (user rempli)
+export interface RegisterResult {
+  email: string;
+  verificationRequired: boolean;
+  user: AuthUser | null;
+}
+
 // La forme d'une réponse d'erreur du backend
 export interface ApiErrorBody {
   error: string;

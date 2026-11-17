@@ -117,17 +117,23 @@ export class UserRepository {
         return client.user.delete({ where: { userId: userId } });
     }
 
-    // Supprime les comptes jamais vérifiés créés avant cette date
-    async deleteUnverifiedCreatedBefore(limit: Date, db?: Prisma.TransactionClient) {
-        let client: Prisma.TransactionClient = prisma;
-        if (db) {
-            client = db;
-        }
-
-        return client.user.deleteMany({
-            where: { emailVerifiedAt: null, createdAt: { lt: limit } },
-        });
+  // Supprime les comptes jamais vérifiés créés avant cette date.
+  // Sécurité : on ne touche qu'aux comptes qui ont un code de vérification en cours,
+  // jamais à un compte plus ancien dont la date de vérification serait simplement vide.
+  async deleteUnverifiedCreatedBefore(limit: Date, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
     }
+
+    return client.user.deleteMany({
+      where: {
+        emailVerifiedAt: null,
+        createdAt: { lt: limit },
+        emailVerification: { isNot: null },
+      },
+    });
+  }
 
     // Prépare la partie "code de vérification" de la création (rien s'il n'y en a pas)
     private verificationData(verification: NewVerificationData | null) {

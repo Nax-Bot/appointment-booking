@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import { CalendarCheck, LogOut } from "lucide-react";
 import { useSession } from "@/context/session-context";
 import { getInitials } from "@/lib/lib-front/text-helpers";
@@ -13,16 +14,24 @@ import LottieLoader from "@/components/ui/LottieLoader";
 export interface NavLink {
     href: string;
     label: string;
+    icon?: LucideIcon; // petite icône devant le texte
+    badge?: number; // pastille de nombre (par exemple les demandes en attente) ; masquée si 0
 }
 
-// links = les liens à afficher : ils changent selon le rôle (le layout les donne)
-interface NavbarProps {
+// Une section de la barre : un titre et ses liens (« Activité », « Offre & disponibilités »…)
+export interface NavGroup {
+    title: string;
     links: NavLink[];
 }
 
-export default function Navbar({ links }: NavbarProps) {
+// groups = les sections à afficher : elles changent selon l'espace (le layout les donne)
+interface NavbarProps {
+    groups: NavGroup[];
+}
+
+export default function Navbar({ groups }: NavbarProps) {
     const { user, logout } = useSession();
-    const pathname = usePathname(); // l'adresse de la page actuelle, par exemple "/services"
+    const pathname = usePathname(); // l'adresse de la page actuelle, par exemple "/pro/services"
     const [loggingOut, setLoggingOut] = useState(false);
 
     async function handleLogout() {
@@ -46,13 +55,58 @@ export default function Navbar({ links }: NavbarProps) {
         }
     }
 
+    const allLinks = groups.flatMap((group) => group.links);
+
+    // Un lien : icône, texte, pastille ; le lien de la page où l'on est se met en évidence
+    function renderLink(link: NavLink) {
+        const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+        const Icon = link.icon;
+        const badge = link.badge !== undefined ? link.badge : 0;
+
+        let linkClass = "text-ink/75 hover:bg-tint/70 hover:text-ink";
+        let iconClass = "text-muted group-hover:text-ink/80";
+        if (isActive) {
+            linkClass = "bg-tint font-semibold text-primary";
+            iconClass = "text-primary";
+        }
+
+        return (
+            <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? "page" : undefined}
+                className={
+                    "group relative flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors duration-200 lg:py-2.5 " +
+                    linkClass
+                }
+            >
+                {Icon !== undefined && (
+                    <Icon className={"h-[18px] w-[18px] shrink-0 transition-colors " + iconClass} strokeWidth={isActive ? 2.25 : 1.9} />
+                )}
+                <span className="flex-1">{link.label}</span>
+                {badge > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-[11px] font-bold text-amber-800 tabular-nums ring-1 ring-amber-300/60 ring-inset">
+                        {badge > 99 ? "99+" : badge}
+                    </span>
+                )}
+                {/* Le trait sur le bord gauche du lien actif (grand écran) / sous le lien (petit écran) */}
+                <span
+                    className={
+                        "absolute right-3 bottom-0 left-3 h-0.5 origin-left rounded-full bg-primary transition-transform duration-300 lg:top-2 lg:right-auto lg:bottom-2 lg:left-0 lg:h-auto lg:w-[3px] lg:origin-center " +
+                        (isActive ? "scale-100" : "scale-0")
+                    }
+                />
+            </Link>
+        );
+    }
+
     return (
         // Sur grand écran : colonne fixe à GAUCHE. Sur petit écran : bandeau en haut.
-        <aside className="order-first border-b border-line/80 bg-white/80 backdrop-blur-md lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
+        <aside className="order-first border-b border-line/80 bg-white/80 backdrop-blur-md lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0">
             {/* Toutes les pages de l'espace sont préchargées en arrière-plan */}
-            <RoutePrefetcher hrefs={links.map((link) => link.href)} />
+            <RoutePrefetcher hrefs={allLinks.map((link) => link.href)} />
 
-            <div className="flex h-full flex-col gap-3 p-3 lg:gap-6 lg:p-5">
+            <div className="flex h-full flex-col gap-3 p-3 lg:gap-5 lg:p-5">
                 <div className="flex items-center justify-between">
                     <Link href="/" className="group flex items-center gap-2.5">
                         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
@@ -74,46 +128,35 @@ export default function Navbar({ links }: NavbarProps) {
                     </button>
                 </div>
 
-                <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-1 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
-                    <p className="mb-1 hidden px-3 text-xs font-semibold tracking-wider text-muted uppercase lg:block">
-                        Menu
-                    </p>
-                    {/* map = un lien par élément de la liste */}
-                    {links.map((link) => {
-                        // Le lien de la page où l'on est se met en évidence
-                        const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                {/* Petit écran : une seule ligne défilante, les sections séparées par un trait fin */}
+                <nav
+                    aria-label="Navigation principale"
+                    className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 lg:hidden"
+                >
+                    {groups.map((group, groupIndex) => (
+                        <div key={group.title} className="flex shrink-0 items-center gap-1">
+                            {groupIndex > 0 && <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />}
+                            {group.links.map((link) => renderLink(link))}
+                        </div>
+                    ))}
+                </nav>
 
-                        let linkClass = "text-ink/80 hover:bg-tint hover:text-ink lg:hover:translate-x-0.5";
-                        if (isActive) {
-                            linkClass = "bg-tint font-semibold text-primary";
-                        }
-
-                        return (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={
-                                    "relative shrink-0 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-all duration-200 lg:py-2.5 " +
-                                    linkClass
-                                }
-                            >
-                                {link.label}
-                                {/* Le trait sur le bord gauche du lien actif (grand écran) / sous le lien (petit écran) */}
-                                <span
-                                    className={
-                                        "absolute right-3 bottom-0 left-3 h-0.5 origin-left rounded-full bg-primary transition-transform duration-300 lg:top-2 lg:right-auto lg:bottom-2 lg:left-0 lg:h-auto lg:w-1 lg:origin-center " +
-                                        (isActive ? "scale-100" : "scale-0")
-                                    }
-                                />
-                            </Link>
-                        );
-                    })}
+                {/* Grand écran : les sections l'une sous l'autre, chacune avec son titre */}
+                <nav aria-label="Navigation principale" className="hidden flex-1 flex-col gap-5 lg:flex">
+                    {groups.map((group) => (
+                        <div key={group.title}>
+                            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted/80 uppercase">
+                                {group.title}
+                            </p>
+                            <div className="flex flex-col gap-0.5">{group.links.map((link) => renderLink(link))}</div>
+                        </div>
+                    ))}
                 </nav>
 
                 {/* Grand écran : la personne connectée et la déconnexion, en bas de la colonne */}
                 <div className="hidden lg:block">
                     {user !== null && (
-                        <div className="mb-3 flex items-center gap-3 rounded-xl border border-line bg-white p-3 shadow-sm">
+                        <div className="mb-3 flex items-center gap-3 rounded-xl border border-line bg-white p-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-sm font-bold text-white ring-2 ring-white">
                                 {getInitials(user.firstName, user.lastName)}
                             </div>

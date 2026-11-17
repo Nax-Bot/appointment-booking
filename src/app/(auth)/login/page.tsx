@@ -2,6 +2,7 @@
 
 import { SubmitEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
 import { ApiError } from "@/lib/lib-front/api-client";
 import Input from "@/components/ui/Input";
@@ -11,6 +12,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 
 export default function LoginPage() {
     const { login } = useSession();
+    const router = useRouter();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -31,6 +33,15 @@ export default function LoginPage() {
             await login(email, password);
             // Succès : le layout (auth) voit l'utilisateur et redirige vers "/"
         } catch (error) {
+            // Mot de passe juste mais e-mail pas encore vérifié : on envoie la personne saisir son code
+            if (
+                error instanceof ApiError &&
+                error.statusCode === 403 &&
+                error.details.some((detail) => detail.includes("EMAIL_NOT_VERIFIED"))
+            ) {
+                router.push("/verify-email?from=login&email=" + encodeURIComponent(email.trim().toLowerCase()));
+                return;
+            }
             if (error instanceof ApiError) {
                 setErrorMessage(error.message);
                 setErrorDetails(error.details);

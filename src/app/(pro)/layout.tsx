@@ -1,28 +1,76 @@
 "use client";
 
-import { useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Briefcase, CalendarDays, CalendarOff, ClipboardList, Clock, LayoutDashboard, UserRound } from "lucide-react";
 import { useSession } from "@/context/session-context";
 import { getHomePath } from "@/lib/navigation";
-import Navbar, { NavLink } from "@/components/layout/Navbar";
+import Navbar, { NavGroup } from "@/components/layout/Navbar";
+import { apiGet } from "@/lib/lib-front/api-client";
+import { AppointmentDetail } from "@/types/booking";
 import AppShellSkeleton from "@/components/layout/AppShellSkeleton";
 import PageTransition from "@/components/layout/PageTransition";
 
-// Les liens de la barre de navigation du professionnel.
-// Quand on construira une nouvelle page professionnel, on ajoutera une ligne ici.
-const proLinks: NavLink[] = [
-    { href: "/pro/profile", label: "Mon profil" },
-    { href: "/pro/calendar", label: "Mon calendrier" },
-    { href: "/pro/services", label: "Mes services" },
-    { href: "/pro/availabilities", label: "Mes horaires" },
-    { href: "/pro/unavailabilities", label: "Mes absences" },
-    { href: "/pro/appointments", label: "Mes rendez-vous" },
-];
+// Les sections de la barre de navigation du professionnel.
+// Quand on construira une nouvelle page professionnel, on ajoutera une ligne dans la bonne section.
+function buildProGroups(pendingCount: number): NavGroup[] {
+    return [
+        {
+            title: "Pilotage",
+            links: [
+                { href: "/pro/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+                { href: "/pro/calendar", label: "Calendrier", icon: CalendarDays },
+                { href: "/pro/appointments", label: "Rendez-vous", icon: ClipboardList, badge: pendingCount },
+            ],
+        },
+        {
+            title: "Offre & disponibilités",
+            links: [
+                { href: "/pro/services", label: "Services", icon: Briefcase },
+                { href: "/pro/availabilities", label: "Horaires", icon: Clock },
+                { href: "/pro/unavailabilities", label: "Absences", icon: CalendarOff },
+            ],
+        },
+        {
+            title: "Compte",
+            links: [{ href: "/pro/profile", label: "Mon profil", icon: UserRound }],
+        },
+    ];
+}
 
 // Enveloppe de toutes les pages de l'espace professionnel
 export default function ProLayout({ children }: { children: ReactNode }) {
     const { user, loading } = useSession();
     const router = useRouter();
+    const pathname = usePathname();
+    // Le nombre de demandes à confirmer : la pastille de « Rendez-vous »
+    const [pendingCount, setPendingCount] = useState(0);
+    const isPro = user !== null && user.role === "PROFESSIONAL";
+
+    // On le recompte à chaque changement de page
+    useEffect(() => {
+        if (isPro === false) {
+            return;
+        }
+        let cancelled = false;
+
+        async function loadPending() {
+            try {
+                const pending = await apiGet<AppointmentDetail[]>("/api/appointments?status=PENDING");
+                if (cancelled === false) {
+                    const now = Date.now();
+                    setPendingCount(pending.filter((item) => new Date(item.startDatetime).getTime() > now).length);
+                }
+            } catch {
+                // La pastille est un confort : sans elle, la page fonctionne quand même
+            }
+        }
+
+        loadPending();
+        return () => {
+            cancelled = true;
+        };
+    }, [isPro, pathname]);
 
     useEffect(() => {
         if (loading === true) {
@@ -51,7 +99,7 @@ export default function ProLayout({ children }: { children: ReactNode }) {
                     <PageTransition>{children}</PageTransition>
                 </div>
             </main>
-            <Navbar links={proLinks} />
+            <Navbar groups={buildProGroups(pendingCount)} />
         </div>
     );
 }

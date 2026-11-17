@@ -2,12 +2,14 @@
 // Ordre : repositories, puis services, puis controllers.
 
 import { UserRepository } from "@/repositories/user.repository";
+import { EmailVerificationRepository } from "@/repositories/email-verification.repository";
 import { ServiceRepository } from "@/repositories/service.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
+import { ConsoleEmailSender } from "@/lib/email-sender";
 import { AuthService } from "@/services/auth.service";
 import { ServiceService } from "@/services/service.service";
 import { ProfessionalService } from "@/services/professional.service";
@@ -25,8 +27,20 @@ import { UnavailabilityController } from "@/controllers/unavailability.controlle
 import { AppointmentController } from "@/controllers/appointment.controller";
 import { SlotController } from "@/controllers/slot.controller";
 
+// La vérification d'email est TOUJOURS exigée, sauf en développement si .env contient
+// REQUIRE_EMAIL_VERIFICATION=false (pratique pour les scripts de test). En production, ce réglage est ignoré.
+let requireEmailVerification = true;
+if (process.env.NODE_ENV !== "production" && process.env.REQUIRE_EMAIL_VERIFICATION === "false") {
+    requireEmailVerification = false;
+}
+
+// L'envoyeur d'emails : pour l'instant un faux qui affiche le code dans la console.
+// On le remplacera par un vrai service à la finalisation.
+const emailSender = new ConsoleEmailSender();
+
 // Repositories
 const userRepository = new UserRepository();
+const emailVerificationRepository = new EmailVerificationRepository();
 const serviceRepository = new ServiceRepository();
 const professionalRepository = new ProfessionalRepository();
 const offerRepository = new OfferRepository();
@@ -35,7 +49,12 @@ const unavailabilityRepository = new UnavailabilityRepository();
 const appointmentRepository = new AppointmentRepository();
 
 // Services
-const authService = new AuthService(userRepository);
+const authService = new AuthService(
+    userRepository,
+    emailVerificationRepository,
+    emailSender,
+    requireEmailVerification
+);
 const serviceService = new ServiceService(serviceRepository, professionalRepository);
 const professionalService = new ProfessionalService(professionalRepository, serviceRepository);
 const offerService = new OfferService(offerRepository, professionalRepository, serviceRepository);

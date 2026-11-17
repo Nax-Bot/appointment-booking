@@ -2,6 +2,7 @@
 
 import { SubmitEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
 import { ApiError } from "@/lib/lib-front/api-client";
 import { isEmailValid } from "@/lib/form-validation";
@@ -14,6 +15,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 
 export default function RegisterPage() {
     const { register } = useSession();
+    const router = useRouter();
 
     const [role, setRole] = useState<Role>("CLIENT");
     const [firstName, setFirstName] = useState("");
@@ -119,8 +121,12 @@ export default function RegisterPage() {
         }
 
         try {
-            await register(data);
-            // Succès : le layout (auth) voit l'utilisateur et redirige vers "/"
+            const result = await register(data);
+            if (result.verificationRequired) {
+                // Un code vient d'être envoyé par e-mail : on passe à sa saisie
+                router.push("/verify-email?email=" + encodeURIComponent(result.email));
+            }
+            // Sinon (compte déjà vérifié) : le layout (auth) voit l'utilisateur et redirige vers "/"
         } catch (error) {
             if (error instanceof ApiError) {
                 setErrorMessage(error.message);

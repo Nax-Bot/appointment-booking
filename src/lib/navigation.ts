@@ -4,7 +4,7 @@ import { Role } from "@/types/api";
 // Écrite ici une seule fois : tout le reste de l'application l'utilise.
 export function getHomePath(role: Role): string {
     if (role === "PROFESSIONAL") {
-        return "/pro/profile";
+        return "/pro/dashboard";
     }
     return "/services";
 }

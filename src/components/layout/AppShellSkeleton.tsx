@@ -1,5 +1,5 @@
 import { Role } from "@/types/api";
-import { Skeleton, SkeletonCard } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 // Le squelette de TOUTE l'application, affiché juste après la connexion :
 // il reprend la forme de la barre de navigation et de la première page du rôle.
@@ -8,18 +8,19 @@ export default function AppShellSkeleton({ role }: { role: Role }) {
     if (role !== "PROFESSIONAL") {
         return <ClientShellSkeleton />;
     }
-    const linkCount = 6;
+    // Les trois sections de la barre : 3 + 3 + 1 liens
+    const groupSizes = [3, 3, 1];
 
     return (
         <div data-role={role} className="flex min-h-screen flex-col lg:flex-row" aria-busy="true" aria-label="Chargement de votre espace">
             <main className="min-w-0 flex-1 p-6">
                 <div className="mx-auto max-w-6xl">
-                    <div className="mb-6 flex items-center gap-4">
+                    <div className="mb-6 space-y-2">
+                        <Skeleton className="h-4 w-40" />
                         <Skeleton className="h-8 w-56" />
-                        <div className="h-px flex-1 bg-line" />
                     </div>
 
-                    <ProProfileSkeleton />
+                    <ProDashboardSkeleton />
                 </div>
             </main>
 
@@ -33,9 +34,14 @@ export default function AppShellSkeleton({ role }: { role: Role }) {
                         </div>
                         <Skeleton className="h-9 w-9 lg:hidden" />
                     </div>
-                    <div className="flex gap-2 overflow-hidden lg:flex-1 lg:flex-col">
-                        {Array.from({ length: linkCount }).map((_, index) => (
-                            <Skeleton key={index} className="h-9 w-28 shrink-0 rounded-lg lg:w-full" />
+                    <div className="flex gap-2 overflow-hidden lg:flex-1 lg:flex-col lg:gap-5">
+                        {groupSizes.map((size, groupIndex) => (
+                            <div key={groupIndex} className="flex gap-2 lg:flex-col lg:gap-1.5">
+                                <Skeleton className="mb-1 hidden h-3 w-24 lg:block" />
+                                {Array.from({ length: size }).map((_, index) => (
+                                    <Skeleton key={index} className="h-9 w-28 shrink-0 rounded-lg lg:w-full" />
+                                ))}
+                            </div>
                         ))}
                     </div>
                     <div className="hidden space-y-3 lg:block">
@@ -48,22 +54,24 @@ export default function AppShellSkeleton({ role }: { role: Role }) {
     );
 }
 
-// Première page du professionnel : le profil
-function ProProfileSkeleton() {
+// Première page du professionnel : le tableau de bord
+function ProDashboardSkeleton() {
     return (
         <div className="space-y-6">
-            <SkeletonCard lines={2} />
-            <div className="rounded-2xl border border-line bg-white p-6 shadow-sm">
-                <Skeleton className="mb-4 h-5 w-40" />
-                <div className="space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-11/12" />
-                    <Skeleton className="h-4 w-2/3" />
-                </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-28 rounded-2xl" />
+                ))}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-                <Skeleton className="h-24 rounded-2xl" />
-                <Skeleton className="h-24 rounded-2xl" />
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+                <div className="space-y-6">
+                    <Skeleton className="h-56 rounded-2xl" />
+                    <Skeleton className="h-64 rounded-2xl" />
+                </div>
+                <div className="space-y-6">
+                    <Skeleton className="h-44 rounded-2xl" />
+                    <Skeleton className="h-52 rounded-2xl" />
+                </div>
             </div>
         </div>
     );

@@ -3,14 +3,16 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { apiGet, apiPost, ApiError } from "@/lib/lib-front/api-client";
 import { startProgress, doneProgress } from "@/lib/lib-front/progress";
-import { AuthUser, RegisterInput } from "@/types/api";
+import { AuthUser, RegisterInput, RegisterResult } from "@/types/api";
 
 // Ce que le contexte met à disposition de toutes les pages
 interface SessionContextValue {
     user: AuthUser | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<AuthUser>; // Login a pour type une fonction qui renvoie une AuthUser
-    register: (data: RegisterInput) => Promise<AuthUser>; // register a pour type une fonction qui renvoie une AuthUser
+    register: (data: RegisterInput) => Promise<RegisterResult>; // renvoie user = null tant que l'e-mail n'est pas vérifié
+    verifyEmail: (email: string, code: string) => Promise<AuthUser>; // vérifie le code reçu par e-mail puis ouvre la session
+    resendCode: (email: string) => Promise<void>; // demande un nouveau code
     logout: () => Promise<void>; // logout a pour type une fonction qui ne renvoie rien
 }
 
@@ -67,16 +69,36 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    async function register(data: RegisterInput): Promise<AuthUser> {
+    async function register(data: RegisterInput): Promise<RegisterResult> {
         startProgress();
         try {
-            const registeredUser = await apiPost<AuthUser>("/api/auth/register", data);
-            setUser(registeredUser);
-            return registeredUser;
+            const result = await apiPost<RegisterResult>("/api/auth/register", data);
+            // Si l'e-mail doit être vérifié, il n'y a pas encore de session : on ne connecte personne
+            if (result.user !== null) {
+                setUser(result.user);
+            }
+            return result;
         } catch (error) {
             doneProgress(true);
             throw error;
         }
+    }
+
+    async function verifyEmail(email: string, code: string): Promise<AuthUser> {
+        startProgress();
+        try {
+            const verifiedUser = await apiPost<AuthUser>("/api/auth/verify-email", { email, code });
+            setUser(verifiedUser);
+            return verifiedUser;
+        } catch (error) {
+            doneProgress(true);
+            throw error;
+        }
+    }
+
+    // La réponse est toujours la même (que le compte existe ou non) : on n'en tire rien
+    async function resendCode(email: string): Promise<void> {
+        await apiPost("/api/auth/resend-code", { email });
     }
 
     async function logout(): Promise<void> {
@@ -89,6 +111,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         loading: loading,
         login: login,
         register: register,
+        verifyEmail: verifyEmail,
+        resendCode: resendCode,
         logout: logout
     };
 
