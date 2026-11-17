@@ -3,6 +3,7 @@
 
 import { UserRepository } from "@/repositories/user.repository";
 import { EmailVerificationRepository } from "@/repositories/email-verification.repository";
+import { RateLimitRepository } from "@/repositories/rate-limit.repository";
 import { ServiceRepository } from "@/repositories/service.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { OfferRepository } from "@/repositories/offer.repository";
@@ -10,6 +11,7 @@ import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
 import { ConsoleEmailSender } from "@/lib/email-sender";
+import { RateLimitService } from "@/services/rate-limit.service";
 import { AuthService } from "@/services/auth.service";
 import { ServiceService } from "@/services/service.service";
 import { ProfessionalService } from "@/services/professional.service";
@@ -41,6 +43,7 @@ const emailSender = new ConsoleEmailSender();
 // Repositories
 const userRepository = new UserRepository();
 const emailVerificationRepository = new EmailVerificationRepository();
+const rateLimitRepository = new RateLimitRepository();
 const serviceRepository = new ServiceRepository();
 const professionalRepository = new ProfessionalRepository();
 const offerRepository = new OfferRepository();
@@ -49,11 +52,13 @@ const unavailabilityRepository = new UnavailabilityRepository();
 const appointmentRepository = new AppointmentRepository();
 
 // Services
+const rateLimitService = new RateLimitService(rateLimitRepository);
 const authService = new AuthService(
     userRepository,
     emailVerificationRepository,
     emailSender,
-    requireEmailVerification
+    requireEmailVerification,
+    rateLimitService
 );
 const serviceService = new ServiceService(serviceRepository, professionalRepository);
 const professionalService = new ProfessionalService(professionalRepository, serviceRepository);
