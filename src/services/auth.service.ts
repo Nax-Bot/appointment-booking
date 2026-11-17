@@ -1,5 +1,6 @@
 import { UserRepository, NewUserData, NewVerificationData } from "@/repositories/user.repository";
 import { EmailVerificationRepository } from "@/repositories/email-verification.repository";
+import { RateLimitService } from "@/services/rate-limit.service";
 import { EmailSender } from "@/lib/email-sender";
 import { hashPassword, verifyPassword, Role } from "@/lib/auth";
 import {
@@ -11,6 +12,7 @@ import {
     RESEND_DELAY_SECONDS,
     UNVERIFIED_ACCOUNT_LIFETIME_HOURS,
 } from "@/lib/verification-code";
+import { LOGIN_BY_EMAIL_RULE, LOGIN_BY_IP_RULE } from "@/lib/rate-limit-rules";
 import {
     ConflictError,
     ForbiddenError,
@@ -76,17 +78,23 @@ export class AuthService {
     private emailVerificationRepository: EmailVerificationRepository;
     private emailSender: EmailSender;
     private requireEmailVerification: boolean;
+    private rateLimitService: RateLimitService;
+
+    // Un hash bcrypt factice, calculé une seule fois (voir login)
+    private dummyHash: string | null = null;
 
     constructor(
         userRepository: UserRepository,
         emailVerificationRepository: EmailVerificationRepository,
         emailSender: EmailSender,
-        requireEmailVerification: boolean
+        requireEmailVerification: boolean,
+        rateLimitService: RateLimitService
     ) {
         this.userRepository = userRepository;
         this.emailVerificationRepository = emailVerificationRepository;
         this.emailSender = emailSender;
         this.requireEmailVerification = requireEmailVerification;
+        this.rateLimitService = rateLimitService;
     }
 
     async register(data: RegisterData): Promise<RegisterResult> {
@@ -104,15 +112,13 @@ export class AuthService {
             // Tout autre compte est considéré comme vraiment pris, même si sa date de vérification est vide :
             // cela protège les comptes créés avant la vérification d'email.
             if (existingUser.emailVerifiedAt !== null || existingUser.emailVerification === null) {
-                throw new ConflictError("Cet email est deja utilisé");
+                throw new ConflictError("Cet email est déjà utilisé");
             }
 
             // Un compte NON vérifié : on empêche d'inonder la boîte mail de quelqu'un
-            if (existingUser.emailVerification !== null) {
-                const waitedMs = now.getTime() - existingUser.emailVerification.lastSentAt.getTime();
-                if (waitedMs < RESEND_DELAY_SECONDS * 1000) {
-                    throw new TooManyRequestsError("Un code vient d'être envoyé. Réessayez dans un instant.");
-                }
+            const waitedMs = now.getTime() - existingUser.emailVerification.lastSentAt.getTime();
+            if (waitedMs < RESEND_DELAY_SECONDS * 1000) {
+                throw new TooManyRequestsError("Un code vient d'être envoyé. Réessayez dans un instant.");
             }
 
             // Sinon, l'ancien compte non vérifié est remplacé par celui-ci
@@ -235,26 +241,57 @@ export class AuthService {
         await this.emailSender.sendVerificationCode(email, code);
     }
 
-    async login(data: LoginData): Promise<AuthUser> {
+    // Connexion, avec limitation des essais.
+    // ipAddress vaut null quand on n'a pas pu lire l'adresse du client : on ne limite alors que par email.
+    async login(data: LoginData, ipAddress: string | null): Promise<AuthUser> {
+        const emailKey = "login:email:" + data.email;
+
+        // Étape 1 : est-ce que cet email ou cette adresse IP est bloqué ? On prend le temps d'attente le plus long.
+        // Cette vérification passe AVANT le mot de passe : pendant un blocage, même le bon mot de passe est refusé.
+        let waitSeconds = await this.rateLimitService.getRetryAfterSeconds(emailKey);
+
+        if (ipAddress !== null) {
+            const ipWaitSeconds = await this.rateLimitService.getRetryAfterSeconds("login:ip:" + ipAddress);
+            if (ipWaitSeconds > waitSeconds) {
+                waitSeconds = ipWaitSeconds;
+            }
+        }
+
+        if (waitSeconds > 0) {
+            const minutes = Math.ceil(waitSeconds / 60);
+            throw new TooManyRequestsError(
+                "Trop de tentatives de connexion. Réessayez dans " + minutes + " minute(s).",
+                waitSeconds
+            );
+        }
+
         const user = await this.userRepository.findByEmail(data.email);
 
-        // Même message dans les deux cas pour ne pas révéler si l'email existe
+        // Email inconnu : on calcule quand même un hash bcrypt (sur un mot de passe factice),
+        // pour que la réponse prenne le même temps que pour un vrai compte.
+        // Sinon, on pourrait mesurer le temps de réponse et deviner quels emails existent.
         if (!user) {
+            await verifyPassword(data.password, await this.getDummyHash());
+            await this.registerLoginFailure(data.email, ipAddress);
             throw new UnauthorizedError("Email ou mot de passe incorrect");
         }
 
         const passwordIsCorrect = await verifyPassword(data.password, user.passwordHash);
         if (!passwordIsCorrect) {
+            await this.registerLoginFailure(data.email, ipAddress);
             throw new UnauthorizedError("Email ou mot de passe incorrect");
         }
 
-        // Le mot de passe est bon, mais l'email n'est pas encore vérifié
+        // Le mot de passe est bon, mais l'email n'est pas encore vérifié (ce n'est pas un échec de connexion)
         if (user.emailVerifiedAt === null) {
             throw new ForbiddenError(
                 "Votre email n'est pas encore vérifié. Entrez le code reçu ou demandez-en un nouveau.",
                 ["code : EMAIL_NOT_VERIFIED"]
             );
         }
+
+        // Réussite : les échecs de cet email sont oubliés (ceux de l'adresse IP restent)
+        await this.rateLimitService.reset(emailKey);
 
         return this.toAuthUser(user);
     }
@@ -267,6 +304,23 @@ export class AuthService {
             throw new UnauthorizedError("Session invalide");
         }
         return this.toAuthUser(user);
+    }
+
+    // Enregistre un échec de connexion pour l'email, et pour l'adresse IP si on la connaît
+    private async registerLoginFailure(email: string, ipAddress: string | null): Promise<void> {
+        await this.rateLimitService.registerFailure("login:email:" + email, LOGIN_BY_EMAIL_RULE);
+
+        if (ipAddress !== null) {
+            await this.rateLimitService.registerFailure("login:ip:" + ipAddress, LOGIN_BY_IP_RULE);
+        }
+    }
+
+    // Le hash factice est calculé la première fois qu'on en a besoin, puis gardé
+    private async getDummyHash(): Promise<string> {
+        if (this.dummyHash === null) {
+            this.dummyHash = await hashPassword("mot-de-passe-factice-pour-egaliser-le-temps");
+        }
+        return this.dummyHash;
     }
 
     // Le rôle se déduit de la fiche liée : client ou professionnel
