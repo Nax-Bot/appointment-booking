@@ -56,11 +56,12 @@ export class AuthController extends BaseController {
     }
   }
 
-  // POST /api/auth/login : vérifie les identifiants puis crée la session
+  // POST /api/auth/login : vérifie les identifiants (avec limitation des essais) puis crée la session
   async login(req: Request) {
     try {
       const data = await this.readAndValidateBody(req, loginSchema);
-      const user = await this.authService.login(data);
+      const ipAddress = this.getClientIp(req);
+      const user = await this.authService.login(data, ipAddress);
       await createSession(user.userId, user.role);
       return this.ok(user);
     } catch (error) {
