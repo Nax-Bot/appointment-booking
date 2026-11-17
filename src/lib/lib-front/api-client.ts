@@ -5,12 +5,15 @@ import { ApiErrorBody } from "@/types/api";
 export class ApiError extends Error {
     statusCode: number;
     details: string[];
+    // Pour une erreur 429 : le nombre de secondes à attendre (en-tête Retry-After), sinon null
+    retryAfterSeconds: number | null;
 
-    constructor(message: string, statusCode: number, details: string[]) {
+    constructor(message: string, statusCode: number, details: string[], retryAfterSeconds: number | null = null) {
         super(message);
         this.name = "ApiError";
         this.statusCode = statusCode;
         this.details = details;
+        this.retryAfterSeconds = retryAfterSeconds;
     }
 }
 
@@ -66,7 +69,14 @@ async function apiFetch<T>(path: string, method: HttpMethod, body?: unknown): Pr
         details = errorBody.details;
     }
 
-    throw new ApiError(message, response.status, details);
+    // Une erreur 429 dit combien de temps attendre dans l'en-tête Retry-After (en secondes)
+    let retryAfterSeconds: number | null = null;
+    const retryHeader = Number(response.headers.get("Retry-After"));
+    if (response.status === 429 && Number.isFinite(retryHeader) && retryHeader > 0) {
+        retryAfterSeconds = Math.ceil(retryHeader);
+    }
+
+    throw new ApiError(message, response.status, details, retryAfterSeconds);
 }
 
 // Petits raccourcis : les pages utilisent ceux-là

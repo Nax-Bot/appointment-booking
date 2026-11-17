@@ -180,13 +180,20 @@ export default function RegisterPage() {
             <Input
                 label="Adresse e-mail"
                 type="email"
+                placeholder="Ex. rakoto@gmail.com"
                 value={email}
                 onChange={setEmail}
                 onBlur={() => setEmailTouched(true)}
                 error={emailError}
             />
 
-            <Input label="Téléphone (facultatif)" value={phoneNumber} onChange={setPhoneNumber} />
+            <Input
+                label="Téléphone (facultatif)"
+                type="tel"
+                placeholder="Ex. 034 12 345 67"
+                value={phoneNumber}
+                onChange={setPhoneNumber}
+            />
 
             <PasswordInput
                 label="Mot de passe"

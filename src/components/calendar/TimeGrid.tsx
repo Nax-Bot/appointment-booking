@@ -166,7 +166,9 @@ export default function TimeGrid({
                                             key={"a" + segment.data.id}
                                             className={
                                                 "pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-lg " +
-                                                TONES.availability.block
+                                                TONES.availability.block +
+                                                " " +
+                                                TONES.availability.bar
                                             }
                                             style={{
                                                 top: (segment.start / 60) * HOUR_PX + 1,
@@ -207,8 +209,10 @@ export default function TimeGrid({
                                             }}
                                             title={segment.data.reason !== null ? segment.data.reason : "Absence"}
                                             className={
-                                                "animate-pop-in absolute inset-x-0.5 z-10 overflow-hidden rounded-lg text-left ring-1 ring-inset ring-[#BE123C]/15 transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:ring-[#BE123C]/35 focus-visible:ring-2 focus-visible:ring-[#BE123C]/50 focus-visible:outline-none " +
-                                                TONES.absence.block
+                                                "animate-pop-in absolute inset-x-0.5 z-10 overflow-hidden rounded-lg text-left transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:border-[#F43F5E] focus-visible:ring-2 focus-visible:ring-[#BE123C]/50 focus-visible:outline-none " +
+                                                TONES.absence.block +
+                                                " " +
+                                                TONES.absence.bar
                                             }
                                             style={{
                                                 ...ABSENCE_STRIPES,
@@ -226,7 +230,7 @@ export default function TimeGrid({
                                         </button>
                                     ))}
 
-                                    {/* Rendez-vous : blocs avec barre d'accent, icône de statut et ombre légère */}
+                                    {/* Rendez-vous : blocs à bordure fine, icône de statut et ombre légère */}
                                     {rdvs.map((segment, index) => {
                                         const tone = toneOf(segment.data.status);
                                         const muted = isMutedStatus(segment.data.status);
@@ -247,7 +251,7 @@ export default function TimeGrid({
                                                 }}
                                                 title={clientName(segment.data) + " · " + segment.data.service.name + " · " + timeText}
                                                 className={
-                                                    "animate-pop-in absolute z-20 overflow-hidden rounded-lg border-l-[3px] text-left shadow-[0_1px_2px_rgba(17,24,39,0.10)] transition-all duration-150 hover:z-30 hover:-translate-y-px hover:shadow-[0_6px_16px_rgba(17,24,39,0.16)] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none " +
+                                                    "animate-pop-in absolute z-20 overflow-hidden rounded-lg text-left shadow-[0_1px_2px_rgba(17,24,39,0.10)] transition-all duration-150 hover:z-30 hover:-translate-y-px hover:shadow-[0_6px_16px_rgba(17,24,39,0.16)] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none " +
                                                     tone.block +
                                                     " " +
                                                     tone.bar +

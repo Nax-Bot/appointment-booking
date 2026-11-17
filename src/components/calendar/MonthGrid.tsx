@@ -123,6 +123,8 @@ export default function MonthGrid({
                                         className={
                                             "truncate rounded-md px-1.5 py-0.5 text-[10.5px] font-medium tabular-nums " +
                                             TONES.availability.block +
+                                            " " +
+                                            TONES.availability.bar +
                                             (inMonth ? "" : " opacity-60")
                                         }
                                         title={"Disponible " + dispoText}
@@ -141,7 +143,9 @@ export default function MonthGrid({
                                         }}
                                         className={
                                             "flex w-full items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-left text-[10.5px] font-medium transition-all hover:shadow-sm hover:brightness-95 focus-visible:ring-2 focus-visible:ring-[#BE123C]/50 focus-visible:outline-none " +
-                                            TONES.absence.block
+                                            TONES.absence.block +
+                                            " " +
+                                            TONES.absence.bar
                                         }
                                     >
                                         <StatusIcon status="absence" className="h-2.5 w-2.5 shrink-0" />
@@ -162,7 +166,7 @@ export default function MonthGrid({
                                                 onAppointmentClick(segment.data);
                                             }}
                                             className={
-                                                "flex w-full items-center gap-1 rounded-md border-l-2 px-1.5 py-0.5 text-left text-[10.5px] font-medium transition-all hover:-translate-y-px hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none " +
+                                                "flex w-full items-center gap-1 rounded-md px-1.5 py-0.5 text-left text-[10.5px] font-medium transition-all hover:-translate-y-px hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none " +
                                                 tone.block +
                                                 " " +
                                                 tone.bar

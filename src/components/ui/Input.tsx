@@ -1,4 +1,7 @@
+import DateInput from "@/components/ui/DateInput";
+
 // Un champ de formulaire avec son étiquette.
+// type="date" donne un champ date en français (jj/mm/aaaa) : la valeur reste « AAAA-MM-JJ ».
 // Si "error" n'est pas vide : bordure rouge clair et message sous le champ.
 // Si "maxLength" est donné : un compteur « 12 / 150 » s'affiche sous le champ.
 interface InputProps {
@@ -22,6 +25,11 @@ export default function Input({
     placeholder = "",
     maxLength,
 }: InputProps) {
+    // Les dates ont leur propre champ (saisie « 23/12/2026 » + calendrier)
+    if (type === "date") {
+        return <DateInput label={label} value={value} onChange={onChange} onBlur={onBlur} error={error} />;
+    }
+
     const hasError = error !== "";
 
     // Couleurs de la bordure et du halo quand on clique dans le champ
@@ -46,7 +54,7 @@ export default function Input({
                 onChange={(event) => onChange(event.target.value)}
                 onBlur={onBlur}
                 className={
-                    "block w-full rounded-lg border bg-white px-3 py-2.5 text-ink transition-shadow duration-200 placeholder:text-muted/60 focus:ring-2 focus:outline-none " +
+                    "block w-full rounded-lg border bg-white px-3 py-2.5 text-ink transition-shadow duration-200 placeholder:text-muted/45 focus:ring-2 focus:outline-none " +
                     fieldClass
                 }
             />

@@ -21,7 +21,7 @@ export interface Tone {
     label: string; // dans la légende
     block: string; // fond + texte
     dot: string; // petit point de couleur
-    bar: string; // barre d'accent à gauche d'un bloc
+    bar: string; // la bordure fine, vive, tout autour d'un bloc
     swatch: string; // la pastille de la légende
 }
 
@@ -31,7 +31,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Disponible",
         block: "bg-[#D5F5E3] text-[#166534]",
         dot: "bg-[#22C55E]",
-        bar: "border-[#22C55E]",
+        bar: "border border-[#22C55E]/70",
         swatch: "bg-[#D5F5E3] ring-1 ring-inset ring-[#22C55E]/60",
     },
     // Absence : rose
@@ -39,7 +39,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Absence",
         block: "bg-[#FFE1E6] text-[#BE123C]",
         dot: "bg-[#F43F5E]",
-        bar: "border-[#F43F5E]",
+        bar: "border border-[#F43F5E]/70",
         swatch: "bg-[#FFE1E6] ring-1 ring-inset ring-[#F43F5E]/60",
     },
     // Confirmé : le teal plein, c'est le plus important à l'écran
@@ -47,7 +47,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Confirmé",
         block: "bg-[#0F766E] text-white",
         dot: "bg-[#0F766E]",
-        bar: "border-[#134E4A]",
+        bar: "border border-[#115E59]",
         swatch: "bg-[#0F766E]",
     },
     // En attente : ambre
@@ -55,7 +55,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "En attente",
         block: "bg-[#FDE8B0] text-[#92400E]",
         dot: "bg-[#F59E0B]",
-        bar: "border-[#F59E0B]",
+        bar: "border border-[#F59E0B]",
         swatch: "bg-[#FDE8B0] ring-1 ring-inset ring-[#F59E0B]/60",
     },
     // Terminé : bleu
@@ -63,7 +63,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Terminé",
         block: "bg-[#D6E6FF] text-[#1E40AF]",
         dot: "bg-[#3B82F6]",
-        bar: "border-[#3B82F6]",
+        bar: "border border-[#3B82F6]",
         swatch: "bg-[#D6E6FF] ring-1 ring-inset ring-[#3B82F6]/60",
     },
     // Annulé : gris neutre
@@ -71,7 +71,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Annulé",
         block: "bg-[#ECEFF1] text-[#6B7280]",
         dot: "bg-[#9CA3AF]",
-        bar: "border-[#9CA3AF]",
+        bar: "border border-[#9CA3AF]",
         swatch: "bg-[#ECEFF1] ring-1 ring-inset ring-[#9CA3AF]/70",
     },
     // Un client qui ne s'est pas présenté : même teinte neutre qu'un rendez-vous annulé
@@ -79,7 +79,7 @@ export const TONES: Record<ToneKey, Tone> = {
         label: "Non présenté",
         block: "bg-[#ECEFF1] text-[#6B7280]",
         dot: "bg-[#9CA3AF]",
-        bar: "border-[#9CA3AF]",
+        bar: "border border-[#9CA3AF]",
         swatch: "bg-[#ECEFF1] ring-1 ring-inset ring-[#9CA3AF]/70",
     },
 };
@@ -100,5 +100,5 @@ export function isMutedStatus(status: string): boolean {
 // Les rayures discrètes d'une absence
 export const ABSENCE_STRIPES: CSSProperties = {
     backgroundImage:
-        "repeating-linear-gradient(135deg, rgba(244,63,94,0.13) 0 6px, rgba(244,63,94,0.02) 6px 12px)",
+        "repeating-linear-gradient(135deg, rgba(244,63,94,0.10) 0 6px, rgba(244,63,94,0.02) 6px 12px)",
 };
