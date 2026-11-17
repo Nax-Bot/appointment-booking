@@ -53,10 +53,14 @@ export class ForbiddenError extends AppError {
   }
 }
 
-// 429 : trop de demandes ou trop d'essais
+// 429 : trop de demandes ou trop d'essais.
+// Le temps d'attente (en secondes) est facultatif : s'il existe, il part dans l'en-tête Retry-After.
 export class TooManyRequestsError extends AppError {
-  constructor(message: string) {
+  public retryAfterSeconds: number | null;
+
+  constructor(message: string, retryAfterSeconds: number | null = null) {
     super(message, 429, []);
     this.name = "TooManyRequestsError";
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
