@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Mêmes limites que le backend
 const SPECIALTY_MAX = 150;
@@ -212,11 +213,7 @@ export default function ProProfilePage() {
 
     return (
         <div>
-            {/* Titre suivi d'un trait */}
-            <div className="mb-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-ink">Mon profil</h1>
-                <div className="h-px flex-1 bg-line" />
-            </div>
+            <PageHeader title="Mon profil" />
 
             <SuccessMessage message={successMessage} />
 

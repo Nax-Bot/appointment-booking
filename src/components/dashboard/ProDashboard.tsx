@@ -25,6 +25,7 @@ import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-for
 import { TONES } from "@/lib/lib-front/calendar-theme";
 import PageLoading from "@/components/ui/PageLoading";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Combien de demandes on montre sur le tableau de bord (les autres sont dans « Rendez-vous »)
 const MAX_PENDING_SHOWN = 5;
@@ -78,22 +79,19 @@ export default function ProDashboard() {
 
     return (
         <div>
-            {/* En-tête */}
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <p className="text-sm font-medium text-muted">{formatLongDate(today)}</p>
-                    <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                        Bonjour{firstName !== "" ? ", " + firstName : ""}
-                    </h1>
-                </div>
-                <Link
-                    href="/pro/calendar"
-                    className="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-ink transition-all hover:border-primary/40 hover:bg-tint active:scale-95"
-                >
-                    <CalendarDays className="h-4 w-4 text-primary" />
-                    Ouvrir le calendrier
-                </Link>
-            </div>
+            <PageHeader
+                eyebrow={formatLongDate(today)}
+                title={"Bonjour" + (firstName !== "" ? ", " + firstName : "")}
+                actions={
+                    <Link
+                        href="/pro/calendar"
+                        className="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-primary/40 hover:bg-tint"
+                    >
+                        <CalendarDays className="h-4 w-4 text-primary" />
+                        Ouvrir le calendrier
+                    </Link>
+                }
+            />
 
             <ErrorMessage message={loadError} details={[]} />
 

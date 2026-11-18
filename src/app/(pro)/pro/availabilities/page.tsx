@@ -18,6 +18,7 @@ import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import AvailabilityModal, { SaveResult } from "@/components/availability/AvailabilityModal";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Un bandeau rouge : un message et, en dessous, la liste de ce qui a été refusé
 interface Warning {
@@ -190,23 +191,18 @@ export default function ProAvailabilitiesPage() {
 
     return (
         <div>
-            {/* Titre, trait et bouton d'ajout */}
-            <div className="mb-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-ink">Mes horaires</h1>
-                <div className="h-px flex-1 bg-line" />
-                <Button fullWidth={false} onClick={openAdd}>
-                    <span className="flex items-center gap-1.5">
-                        <Plus className="h-4 w-4" />
-                        Ajouter une plage
-                    </span>
-                </Button>
-            </div>
-
-            <p className="mb-6 text-sm text-muted">
-                Indiquez vos horaires de travail habituels. Les heures sont en heure locale de
-                Madagascar. Pour une pause (déjeuner, par exemple), créez deux plages le même jour :
-                09:00 – 12:00, puis 14:00 – 18:00.
-            </p>
+            <PageHeader
+                title="Mes horaires"
+                description="Indiquez vos horaires de travail habituels. Les heures sont en heure locale de Madagascar. Pour une pause (déjeuner, par exemple), créez deux plages le même jour : 09:00 – 12:00, puis 14:00 – 18:00."
+                actions={
+                    <Button fullWidth={false} onClick={openAdd}>
+                        <span className="flex items-center gap-1.5">
+                            <Plus className="h-4 w-4" />
+                            Ajouter une plage
+                        </span>
+                    </Button>
+                }
+            />
 
             <SuccessMessage message={successMessage} />
             {warning !== null && <ErrorMessage message={warning.message} details={warning.details} isDisplay={isdisplay}/>}

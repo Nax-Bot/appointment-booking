@@ -10,6 +10,7 @@ import { SEARCH_PAUSE_MS } from "@/lib/lib-front/search-config";
 import Input from "@/components/ui/Input";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ProfessionalCard from "@/components/professionals/ProfessionalCard";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Une « clé » qui décrit une recherche : le service filtré et le texte tapé.
 // Elle sert à savoir si la liste affichée correspond bien à ce que la personne a tapé.
@@ -123,11 +124,7 @@ export default function ProfessionalsBrowser() {
 
     return (
         <div>
-            {/* Titre suivi d'un trait */}
-            <div className="mb-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-ink">Professionnels</h1>
-                <div className="h-px flex-1 bg-line" />
-            </div>
+            <PageHeader title="Professionnels" />
 
             {/* Le service filtré, avec deux liens pour en sortir */}
             {serviceId !== null && (

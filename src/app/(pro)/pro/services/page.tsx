@@ -12,6 +12,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import AddServiceModal from "@/components/services/AddServiceModal";
 import EditOfferModal from "@/components/services/EditOfferModal";
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function ProServicesPage() {
     // Mes services, tels que le backend me les renvoie
@@ -144,17 +145,17 @@ export default function ProServicesPage() {
 
     return (
         <div>
-            {/* Titre, trait et bouton d'ajout */}
-            <div className="mb-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-ink">Mes services</h1>
-                <div className="h-px flex-1 bg-line" />
-                <Button fullWidth={false} onClick={openAdd}>
-                    <span className="flex items-center gap-1.5">
-                        <Plus className="h-4 w-4" />
-                        Ajouter un service
-                    </span>
-                </Button>
-            </div>
+            <PageHeader
+                title="Mes services"
+                actions={
+                    <Button fullWidth={false} onClick={openAdd}>
+                        <span className="flex items-center gap-1.5">
+                            <Plus className="h-4 w-4" />
+                            Ajouter un service
+                        </span>
+                    </Button>
+                }
+            />
 
             <SuccessMessage message={successMessage} />
 

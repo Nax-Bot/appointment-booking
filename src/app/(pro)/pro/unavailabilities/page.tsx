@@ -11,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import UnavailabilityModal from "@/components/unavailability/UnavailabilityModal";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Une carte d'absence. isPast = true : elle est terminée, on l'affiche en plus pâle.
 interface AbsenceCardProps {
@@ -229,23 +230,18 @@ export default function ProUnavailabilitiesPage() {
 
     return (
         <div>
-            {/* Titre, trait et bouton d'ajout */}
-            <div className="mb-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-ink">Mes absences</h1>
-                <div className="h-px flex-1 bg-line" />
-                <Button fullWidth={false} onClick={openAdd}>
-                    <span className="flex items-center gap-1.5">
-                        <Plus className="h-4 w-4" />
-                        Ajouter une absence
-                    </span>
-                </Button>
-            </div>
-
-            <p className="mb-6 text-sm text-muted">
-                Déclarez vos congés ou vos formations : pendant une absence, aucun créneau n&apos;est
-                proposé aux clients. Les heures sont en heure locale de Madagascar. Les
-                rendez-vous déjà pris pendant une absence ne sont pas annulés automatiquement.
-            </p>
+            <PageHeader
+                title="Mes absences"
+                description="Déclarez vos congés ou vos formations : pendant une absence, aucun créneau n'est proposé aux clients. Les heures sont en heure locale de Madagascar. Les rendez-vous déjà pris pendant une absence ne sont pas annulés automatiquement."
+                actions={
+                    <Button fullWidth={false} onClick={openAdd}>
+                        <span className="flex items-center gap-1.5">
+                            <Plus className="h-4 w-4" />
+                            Ajouter une absence
+                        </span>
+                    </Button>
+                }
+            />
 
             <SuccessMessage message={successMessage} />
 

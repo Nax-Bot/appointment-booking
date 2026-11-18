@@ -41,6 +41,7 @@ import TimeGrid from "@/components/calendar/TimeGrid";
 import DayAgenda from "@/components/calendar/DayAgenda";
 import MonthGrid from "@/components/calendar/MonthGrid";
 import { AbsenceDialog, AppointmentDialog, SlotDialog } from "@/components/calendar/CalendarDialogs";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Les éléments de la légende, dans l'ordre
 const LEGEND: ToneKey[] = ["availability", "absence", "CONFIRMED", "PENDING", "COMPLETED", "CANCELLED"];
@@ -423,33 +424,32 @@ export default function ProCalendar() {
 
     return (
         <div>
-            {/* Même en-tête que les autres pages : titre, trait, boutons */}
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold text-ink">Mon calendrier</h1>
-                <div className="hidden h-px min-w-8 flex-1 bg-line sm:block" />
-                <Button variant="secondary" fullWidth={false} onClick={() => openAbsenceForm(anchorDate, null)}>
-                    <span className="flex items-center gap-1.5 text-red-600">
-                        <CalendarOff className="h-4 w-4" />
-                        Absence
-                    </span>
-                </Button>
-                <Button variant="secondary" fullWidth={false} onClick={() => openAvailabilityForm(anchorDate, null)}>
-                    <span className="flex items-center gap-1.5">
-                        <Plus className="h-4 w-4" />
-                        Disponibilité
-                    </span>
-                </Button>
-                <Button fullWidth={false} onClick={() => openNewAppointment(anchorDate, null)}>
-                    <span className="flex items-center gap-1.5">
-                        <CalendarPlus className="h-4 w-4" />
-                        Rendez-vous
-                    </span>
-                </Button>
-            </div>
-            <p className="mb-6 text-sm text-muted">
-                Vos disponibilités, vos absences et vos rendez-vous au même endroit. Les heures sont en heure
-                locale de Madagascar.
-            </p>
+            <PageHeader
+                title="Mon calendrier"
+                description="Vos disponibilités, vos absences et vos rendez-vous au même endroit. Les heures sont en heure locale de Madagascar."
+                actions={
+                    <>
+                        <Button variant="secondary" fullWidth={false} onClick={() => openAbsenceForm(anchorDate, null)}>
+                            <span className="flex items-center gap-1.5 text-red-600">
+                                <CalendarOff className="h-4 w-4" />
+                                Absence
+                            </span>
+                        </Button>
+                        <Button variant="secondary" fullWidth={false} onClick={() => openAvailabilityForm(anchorDate, null)}>
+                            <span className="flex items-center gap-1.5">
+                                <Plus className="h-4 w-4" />
+                                Disponibilité
+                            </span>
+                        </Button>
+                        <Button fullWidth={false} onClick={() => openNewAppointment(anchorDate, null)}>
+                            <span className="flex items-center gap-1.5">
+                                <CalendarPlus className="h-4 w-4" />
+                                Rendez-vous
+                            </span>
+                        </Button>
+                    </>
+                }
+            />
 
             <SuccessMessage message={successMessage} />
             {warning !== null && <ErrorMessage message={warning.message} details={warning.details} />}

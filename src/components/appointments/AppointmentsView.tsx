@@ -11,6 +11,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import AppointmentCard from "@/components/appointments/AppointmentCard";
 import CancelAppointmentModal from "@/components/appointments/CancelAppointmentModal";
+import PageHeader from "@/components/ui/PageHeader";
 
 // Les filtres : la valeur envoyée au backend (?status=) et le texte de la pastille.
 // "" = pas de filtre.
@@ -213,15 +214,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                     </div>
                 </section>
             ) : (
-                <>
-                    {/* Titre suivi d'un trait */}
-                    <div className="mb-6 flex items-center gap-4">
-                        <h1 className="text-2xl font-bold text-ink">Mes rendez-vous</h1>
-                        <div className="h-px flex-1 bg-line" />
-                    </div>
-
-                    <p className="mb-6 text-sm text-muted">{intro}</p>
-                </>
+                <PageHeader title="Mes rendez-vous" description={intro} />
             )}
 
             {/* Les pastilles de filtre */}
