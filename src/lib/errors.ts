@@ -64,3 +64,11 @@ export class TooManyRequestsError extends AppError {
     this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+
+// 503 : un service dont on dépend (par exemple l'envoi d'emails) ne répond pas
+export class ServiceUnavailableError extends AppError {
+  constructor(message: string) {
+    super(message, 503, []);
+    this.name = "ServiceUnavailableError";
+  }
+}
