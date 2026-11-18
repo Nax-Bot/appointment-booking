@@ -16,6 +16,7 @@ import { LOGIN_BY_EMAIL_RULE, LOGIN_BY_IP_RULE } from "@/lib/rate-limit-rules";
 import {
     ConflictError,
     ForbiddenError,
+    ServiceUnavailableError,
     TooManyRequestsError,
     UnauthorizedError,
     ValidationError,
@@ -175,7 +176,17 @@ export class AuthService {
         }
 
         if (this.requireEmailVerification) {
-            await this.emailSender.sendVerificationCode(data.email, code);
+            try {
+                await this.emailSender.sendVerificationCode(data.email, code);
+            } catch (error) {
+                // L'email n'a pas pu partir : on supprime le compte qu'on vient de créer,
+                // pour que la personne puisse réessayer tout de suite
+                // (sinon le délai de 60 secondes la bloquerait alors qu'aucun code n'est arrivé).
+                console.error("Échec de l'envoi de l'email de vérification :", error);
+                await this.userRepository.deleteById(createdUser.userId);
+                throw new ServiceUnavailableError("Impossible d'envoyer l'email de vérification. Réessayez dans un instant.");
+            }
+
             return { email: data.email, verificationRequired: true, user: null };
         }
 
@@ -238,7 +249,13 @@ export class AuthService {
         const code = generateCode();
         const expiresAt = new Date(now.getTime() + CODE_LIFETIME_MINUTES * 60 * 1000);
         await this.emailVerificationRepository.upsert(user.userId, hashCode(email, code), expiresAt, now);
-        await this.emailSender.sendVerificationCode(email, code);
+
+        try {
+            await this.emailSender.sendVerificationCode(email, code);
+        } catch (error) {
+            console.error("Échec de l'envoi de l'email de vérification :", error);
+            throw new ServiceUnavailableError("Impossible d'envoyer l'email de vérification. Réessayez dans un instant.");
+        }
     }
 
     // Connexion, avec limitation des essais.
