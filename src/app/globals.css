@@ -3,11 +3,20 @@
 @theme {
   --color-page: #f6f8fa;
   --color-tint: #f0fdf4;
-  --color-line: #e5e7eb;
+  --color-line: #dbe0e7;
   --color-ink: #111827;
   --color-muted: #64748b;
   --color-primary: #15803d;
   --color-primary-hover: #166534;
+
+  /* Un style plus sobre : coins peu arrondis, ombres presque invisibles (la bordure fait le travail) */
+  --radius-md: 0.3125rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+  --shadow-xs: 0 1px 1px 0 rgb(16 24 40 / 0.03);
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.05);
 
   /* "backwards" (et pas "both") : après l'animation, plus aucun transform ne reste sur l'élément,
      sinon les fenêtres modales (position: fixed) restent coincées dans la page au lieu de couvrir l'écran */
