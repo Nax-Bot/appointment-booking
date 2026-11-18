@@ -1,74 +1,74 @@
 // Erreur de base de l'application : un message + un code HTTP
 export class AppError extends Error {
-  public statusCode: number;
-  public details: string[];
+    public statusCode: number;
+    public details: string[];
 
-  constructor(message: string, statusCode: number, details: string[]) {
-    super(message);
-    this.name = "AppError";
-    this.statusCode = statusCode;
-    this.details = details;
-  }
+    constructor(message: string, statusCode: number, details: string[]) {
+        super(message);
+        this.name = "AppError";
+        this.statusCode = statusCode;
+        this.details = details;
+    }
 }
 
 // 404 : la ressource demandée n'existe pas
 export class NotFoundError extends AppError {
-  constructor(message: string) {
-    super(message, 404, []);
-    this.name = "NotFoundError";
-  }
+    constructor(message: string) {
+        super(message, 404, []);
+        this.name = "NotFoundError";
+    }
 }
 
 // 409 : conflit (ex. email déjà utilisé, créneau déjà pris, service déjà existant).
 // Les détails sont facultatifs : sans eux, la liste est vide.
 export class ConflictError extends AppError {
-  constructor(message: string, details: string[] = []) {
-    super(message, 409, details);
-    this.name = "ConflictError";
-  }
+    constructor(message: string, details: string[] = []) {
+        super(message, 409, details);
+        this.name = "ConflictError";
+    }
 }
 
 // 400 : données invalides (on peut donner la liste des problèmes)
 export class ValidationError extends AppError {
-  constructor(message: string, details: string[]) {
-    super(message, 400, details);
-    this.name = "ValidationError";
-  }
+    constructor(message: string, details: string[]) {
+        super(message, 400, details);
+        this.name = "ValidationError";
+    }
 }
 
 // 401 : pas connecté, ou identifiants incorrects
 export class UnauthorizedError extends AppError {
-  constructor(message: string) {
-    super(message, 401, []);
-    this.name = "UnauthorizedError";
-  }
+    constructor(message: string) {
+        super(message, 401, []);
+        this.name = "UnauthorizedError";
+    }
 }
 
 // 403 : connecté mais pas autorisé (mauvais rôle), ou compte pas encore vérifié.
 // Les détails sont facultatifs : ils permettent au frontend de reconnaître le cas.
 export class ForbiddenError extends AppError {
-  constructor(message: string, details: string[] = []) {
-    super(message, 403, details);
-    this.name = "ForbiddenError";
-  }
+    constructor(message: string, details: string[] = []) {
+        super(message, 403, details);
+        this.name = "ForbiddenError";
+    }
 }
 
 // 429 : trop de demandes ou trop d'essais.
 // Le temps d'attente (en secondes) est facultatif : s'il existe, il part dans l'en-tête Retry-After.
 export class TooManyRequestsError extends AppError {
-  public retryAfterSeconds: number | null;
+    public retryAfterSeconds: number | null;
 
-  constructor(message: string, retryAfterSeconds: number | null = null) {
-    super(message, 429, []);
-    this.name = "TooManyRequestsError";
-    this.retryAfterSeconds = retryAfterSeconds;
-  }
+    constructor(message: string, retryAfterSeconds: number | null = null) {
+        super(message, 429, []);
+        this.name = "TooManyRequestsError";
+        this.retryAfterSeconds = retryAfterSeconds;
+    }
 }
 
 // 503 : un service dont on dépend (par exemple l'envoi d'emails) ne répond pas
 export class ServiceUnavailableError extends AppError {
-  constructor(message: string) {
-    super(message, 503, []);
-    this.name = "ServiceUnavailableError";
-  }
+    constructor(message: string) {
+        super(message, 503, []);
+        this.name = "ServiceUnavailableError";
+    }
 }
