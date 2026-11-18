@@ -10,7 +10,10 @@ import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
-import { ConsoleEmailSender } from "@/lib/email-sender";
+
+import { ConsoleEmailSender, EmailSender } from "@/lib/email-sender";
+import { SmtpEmailSender } from "@/lib/smtp-email-sender";
+import { readSmtpConfig } from "@/lib/smtp-config";
 import { RateLimitService } from "@/services/rate-limit.service";
 import { AuthService } from "@/services/auth.service";
 import { ServiceService } from "@/services/service.service";
@@ -36,9 +39,15 @@ if (process.env.NODE_ENV !== "production" && process.env.REQUIRE_EMAIL_VERIFICAT
     requireEmailVerification = false;
 }
 
-// L'envoyeur d'emails : pour l'instant un faux qui affiche le code dans la console.
-// On le remplacera par un vrai service à la finalisation.
-const emailSender = new ConsoleEmailSender();
+// L'envoyeur d'emails :
+// - EMAIL_SENDER=smtp dans .env : un vrai envoi par SMTP (Gmail, Brevo, Ethereal...)
+// - sinon : un faux qui affiche le code dans la console (développement seulement, refusé en production)
+let emailSender: EmailSender;
+if (process.env.EMAIL_SENDER === "smtp") {
+    emailSender = new SmtpEmailSender(readSmtpConfig(process.env));
+} else {
+    emailSender = new ConsoleEmailSender(process.env.NODE_ENV === "production");
+}
 
 // Repositories
 const userRepository = new UserRepository();
