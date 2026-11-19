@@ -71,6 +71,14 @@ export class ProfessionalRepository {
         });
     }
 
+    // Verrouille la ligne d'un professionnel jusqu'à la fin de la transaction (SELECT ... FOR UPDATE).
+    // Deux réservations pour le même professionnel passent alors l'une après l'autre.
+    // Doit être appelé DANS une transaction. Renvoie false si le professionnel n'existe pas.
+    async lockById(userId: number, db: Prisma.TransactionClient): Promise<boolean> {
+        const rows = await db.$queryRaw<{ user_id: number }[]>`SELECT user_id FROM professionals WHERE user_id = ${userId} FOR UPDATE`;
+        return rows.length > 0;
+    }
+
     // Modifie le profil d'un professionnel
     async updateProfile(userId: number, data: UpdateProfileData, db?: Prisma.TransactionClient) {
         let client: Prisma.TransactionClient = prisma;
