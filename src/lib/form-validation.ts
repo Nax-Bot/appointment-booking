@@ -64,3 +64,30 @@ export function getPasswordStrength(password: string): PasswordStrength {
 
     return { score: score, label: label };
 }
+
+// Règle du mot de passe (la même que celle du backend) : renvoie le message d'erreur,
+// ou "" si le mot de passe est accepté. Le caractère spécial reste facultatif.
+// bcrypt ne lit que les 72 premiers octets : un "é" ou un emoji prend plusieurs octets.
+export function getPasswordRuleError(password: string): string {
+    const checks = getPasswordChecks(password);
+
+    if (checks.length === false) {
+        return "Le mot de passe doit contenir au moins 8 caractères";
+    }
+    if (checks.uppercase === false) {
+        return "Le mot de passe doit contenir au moins une majuscule";
+    }
+    if (checks.lowercase === false) {
+        return "Le mot de passe doit contenir au moins une minuscule";
+    }
+    if (checks.digit === false) {
+        return "Le mot de passe doit contenir au moins un chiffre";
+    }
+
+    const bytes = new TextEncoder().encode(password).length;
+    if (bytes > 72) {
+        return "Le mot de passe est trop long (72 octets maximum)";
+    }
+
+    return "";
+}
