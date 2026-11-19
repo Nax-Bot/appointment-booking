@@ -64,11 +64,13 @@ export class AppointmentController extends BaseController {
     }
 
     // POST /api/appointments/[id]/cancel : annuler un de mes rendez-vous (client ou professionnel)
+    // La raison est facultative : un corps absent ou vide est accepté (traité comme {}).
     async cancel(req: Request, idText: string) {
         try {
             const session = await this.requireSession();
             const id = this.parseId(idText);
-            const data = await this.readAndValidateBody(req, cancelAppointmentSchema);
+            // CHANGEMENT : on accepte un corps vide
+            const data = await this.readAndValidateOptionalBody(req, cancelAppointmentSchema);
             const appointment = await this.appointmentService.cancel(session.userId, session.role, id, data.reason);
             return this.ok(appointment);
         } catch (error) {
