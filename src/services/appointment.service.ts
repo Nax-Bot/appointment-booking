@@ -7,6 +7,7 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/datetime";
 import { Role } from "@/lib/auth";
 import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/slot-grid";
+import type { TransactionRunner } from "@/lib/transaction-runner";
 
 // Données reçues pour réserver
 export interface CreateAppointmentInput {
@@ -101,19 +102,22 @@ export class AppointmentService {
     private offerRepository: OfferRepository;
     private availabilityRepository: AvailabilityRepository;
     private unavailabilityRepository: UnavailabilityRepository;
+    private transactionRunner: TransactionRunner;
 
     constructor(
         appointmentRepository: AppointmentRepository,
         professionalRepository: ProfessionalRepository,
         offerRepository: OfferRepository,
         availabilityRepository: AvailabilityRepository,
-        unavailabilityRepository: UnavailabilityRepository
+        unavailabilityRepository: UnavailabilityRepository,
+        transactionRunner: TransactionRunner
     ) {
         this.appointmentRepository = appointmentRepository;
         this.professionalRepository = professionalRepository;
         this.offerRepository = offerRepository;
         this.availabilityRepository = availabilityRepository;
         this.unavailabilityRepository = unavailabilityRepository;
+        this.transactionRunner = transactionRunner;
     }
 
     // Réserve un rendez-vous pour un client
@@ -174,25 +178,39 @@ export class AppointmentService {
             throw new ConflictError("Le professionnel est indisponible à cette période");
         }
 
-        // Règle 6 : pas d'autre rendez-vous (non annulé) sur la période
-        const others = await this.appointmentRepository.findOverlapping(input.professionalId, start, end);
-        if (others.length > 0) {
-            throw new ConflictError("Ce créneau est déjà réservé");
-        }
-
         let notes: string | null = null;
         if (input.notes !== undefined && input.notes !== null) {
             notes = input.notes;
         }
 
-        const row = await this.appointmentRepository.create({
-            clientId: clientId,
-            professionalId: input.professionalId,
-            serviceId: input.serviceId,
-            startDatetime: start,
-            endDatetime: end,
-            priceAtBooking: price,
-            notes: notes,
+        // Règle 6 : pas d'autre rendez-vous (non annulé) sur la période.
+        // Le contrôle et l'insertion sont dans UNE transaction, avec un verrou sur le professionnel :
+        // si deux clients réservent le même créneau en même temps, le second attend le premier,
+        // puis voit son rendez-vous et reçoit "déjà réservé".
+        const row = await this.transactionRunner.run(async (db) => {
+            // Le verrou doit être la PREMIÈRE requête de la transaction
+            const isLocked = await this.professionalRepository.lockById(input.professionalId, db);
+            if (isLocked === false) {
+                throw new NotFoundError("Professionnel introuvable");
+            }
+
+            const others = await this.appointmentRepository.findOverlapping(input.professionalId, start, end, db);
+            if (others.length > 0) {
+                throw new ConflictError("Ce créneau est déjà réservé");
+            }
+
+            return this.appointmentRepository.create(
+                {
+                    clientId: clientId,
+                    professionalId: input.professionalId,
+                    serviceId: input.serviceId,
+                    startDatetime: start,
+                    endDatetime: end,
+                    priceAtBooking: price,
+                    notes: notes,
+                },
+                db
+            );
         });
         return this.toItem(row);
     }
@@ -232,12 +250,6 @@ export class AppointmentService {
 
         const end = new Date(start.getTime() + duration * 60 * 1000);
 
-        // Règle 4 : pas d'autre rendez-vous (non annulé) sur la période
-        const others = await this.appointmentRepository.findOverlapping(professionalId, start, end);
-        if (others.length > 0) {
-            throw new ConflictError("Ce créneau est déjà réservé");
-        }
-
         let guestPhone: string | null = null;
         if (input.guestPhone !== undefined && input.guestPhone !== null) {
             guestPhone = input.guestPhone;
@@ -248,17 +260,35 @@ export class AppointmentService {
             notes = input.notes;
         }
 
-        // C'est le professionnel qui a décidé : le rendez-vous est confirmé tout de suite
-        const row = await this.appointmentRepository.createManual({
-            professionalId: professionalId,
-            serviceId: input.serviceId,
-            startDatetime: start,
-            endDatetime: end,
-            priceAtBooking: price,
-            status: "CONFIRMED",
-            guestName: input.guestName,
-            guestPhone: guestPhone,
-            notes: notes,
+        // Règle 4 : pas d'autre rendez-vous (non annulé) sur la période.
+        // Même principe que pour la réservation d'un client : verrou, contrôle et insertion dans UNE transaction.
+        const row = await this.transactionRunner.run(async (db) => {
+            // Le verrou doit être la PREMIÈRE requête de la transaction
+            const isLocked = await this.professionalRepository.lockById(professionalId, db);
+            if (isLocked === false) {
+                throw new NotFoundError("Professionnel introuvable");
+            }
+
+            const others = await this.appointmentRepository.findOverlapping(professionalId, start, end, db);
+            if (others.length > 0) {
+                throw new ConflictError("Ce créneau est déjà réservé");
+            }
+
+            // C'est le professionnel qui a décidé : le rendez-vous est confirmé tout de suite
+            return this.appointmentRepository.createManual(
+                {
+                    professionalId: professionalId,
+                    serviceId: input.serviceId,
+                    startDatetime: start,
+                    endDatetime: end,
+                    priceAtBooking: price,
+                    status: "CONFIRMED",
+                    guestName: input.guestName,
+                    guestPhone: guestPhone,
+                    notes: notes,
+                },
+                db
+            );
         });
         return this.toDetail(row);
     }
