@@ -47,6 +47,42 @@ export class AppointmentRepository {
     });
   }
 
+  // Les rendez-vous ACTIFS (en attente ou confirmés) d'un professionnel qui chevauchent la période donnée.
+  // Sert à protéger les rendez-vous existants : un terminé, absent ou annulé n'empêche rien.
+  async findActiveOverlapping(professionalId: number, start: Date, end: Date, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    return client.appointment.findMany({
+      where: {
+        professionalId: professionalId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        startDatetime: { lt: end },
+        endDatetime: { gt: start },
+      },
+      orderBy: { startDatetime: "asc" },
+    });
+  }
+
+  // Les rendez-vous ACTIFS (en attente ou confirmés) d'un professionnel qui ne sont pas encore terminés à cet instant
+  async findActiveEndingAfter(professionalId: number, after: Date, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    return client.appointment.findMany({
+      where: {
+        professionalId: professionalId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        endDatetime: { gt: after },
+      },
+      orderBy: { startDatetime: "asc" },
+    });
+  }
+
   // Crée un rendez-vous réservé par un client (le statut vaut PENDING par défaut)
   async create(data: NewAppointmentData, db?: Prisma.TransactionClient) {
     let client: Prisma.TransactionClient = prisma;
