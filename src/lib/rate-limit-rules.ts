@@ -5,9 +5,19 @@ export interface RateLimitRule {
     blockSeconds: number;
 }
 
-// Connexion : 5 échecs en 15 minutes pour un même email, puis blocage de 15 minutes
-export const LOGIN_BY_EMAIL_RULE: RateLimitRule = {
+// Connexion : 5 échecs en 15 minutes pour un même COUPLE email + adresse IP, puis blocage de 15 minutes.
+// Le couple est ce qui bloque : un tiers qui tape de faux mots de passe depuis SON adresse
+// ne peut donc pas empêcher le vrai propriétaire de se connecter depuis la sienne.
+export const LOGIN_BY_PAIR_RULE: RateLimitRule = {
     maxFailures: 5,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};
+
+// Connexion : garde-fou par email, toutes adresses confondues (attaque répartie sur beaucoup d'adresses).
+// La limite est haute exprès : avec 5 elle permettrait de verrouiller le compte de quelqu'un d'autre.
+export const LOGIN_BY_EMAIL_RULE: RateLimitRule = {
+    maxFailures: 50,
     windowSeconds: 15 * 60,
     blockSeconds: 15 * 60,
 };
@@ -15,6 +25,28 @@ export const LOGIN_BY_EMAIL_RULE: RateLimitRule = {
 // Connexion : 20 échecs en 15 minutes depuis une même adresse IP (tous emails confondus), puis blocage de 15 minutes
 export const LOGIN_BY_IP_RULE: RateLimitRule = {
     maxFailures: 20,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};
+
+// Inscription : 10 demandes par heure et par adresse IP, puis blocage d'une heure
+export const REGISTER_BY_IP_RULE: RateLimitRule = {
+    maxFailures: 10,
+    windowSeconds: 60 * 60,
+    blockSeconds: 60 * 60,
+};
+
+// Vérification du code : 30 essais en 15 minutes par adresse IP, puis blocage de 15 minutes
+// (les essais par code sont déjà limités à 5 dans le service)
+export const VERIFY_BY_IP_RULE: RateLimitRule = {
+    maxFailures: 30,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};
+
+// Renvoi de code : 10 demandes en 15 minutes par adresse IP, puis blocage de 15 minutes
+export const RESEND_BY_IP_RULE: RateLimitRule = {
+    maxFailures: 10,
     windowSeconds: 15 * 60,
     blockSeconds: 15 * 60,
 };

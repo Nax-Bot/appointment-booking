@@ -21,7 +21,8 @@ export class AuthController extends BaseController {
   async register(req: Request) {
     try {
       const data = await this.readAndValidateBody(req, registerSchema);
-      const result = await this.authService.register(data);
+      const ipAddress = this.getClientIp(req);
+      const result = await this.authService.register(data, ipAddress);
 
       if (result.user !== null) {
         await createSession(result.user.userId, result.user.role);
@@ -37,7 +38,8 @@ export class AuthController extends BaseController {
   async verifyEmail(req: Request) {
     try {
       const data = await this.readAndValidateBody(req, verifyEmailSchema);
-      const user = await this.authService.verifyEmail(data);
+      const ipAddress = this.getClientIp(req);
+      const user = await this.authService.verifyEmail(data, ipAddress);
       await createSession(user.userId, user.role);
       return this.ok(user);
     } catch (error) {
@@ -49,7 +51,8 @@ export class AuthController extends BaseController {
   async resendCode(req: Request) {
     try {
       const data = await this.readAndValidateBody(req, resendCodeSchema);
-      await this.authService.resendCode(data.email);
+      const ipAddress = this.getClientIp(req);
+      await this.authService.resendCode(data.email, ipAddress);
       return this.ok({ message: "Si un compte non vérifié existe pour cet email, un nouveau code a été envoyé." });
     } catch (error) {
       return this.handleError(error);

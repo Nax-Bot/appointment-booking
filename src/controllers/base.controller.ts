@@ -81,25 +81,35 @@ export class BaseController {
         return Number(result.data);
     }
 
-    // Lit l'adresse IP du client, ou null si on ne peut pas la lire de façon raisonnable.
-    // ATTENTION : l'en-tête x-forwarded-for n'est fiable que derrière un serveur de confiance
-    // (l'hébergeur en production). Sans lui, un client peut écrire n'importe quoi.
+    // Lit l'adresse IP du client, ou null si on ne peut pas s'y fier.
+    // Les en-têtes x-forwarded-for et x-real-ip peuvent être écrits n'importe comment par le client :
+    // on ne les lit QUE si l'hébergeur les pose pour nous (TRUST_PROXY_HEADERS=true dans .env).
+    // Sans ce réglage : en développement toutes les requêtes viennent de la même machine ("local"),
+    // en production on renvoie null (la limitation par adresse est alors désactivée, celle par email reste).
     protected getClientIp(req: Request): string | null {
-        const forwarded = req.headers.get("x-forwarded-for");
-        if (forwarded !== null) {
-            // Il peut y avoir plusieurs adresses séparées par des virgules : la première est celle du client
-            const first = forwarded.split(",")[0].trim();
-            if (first !== "" && first.length <= 64) {
-                return first;
+        if (process.env.TRUST_PROXY_HEADERS === "true") {
+            const forwarded = req.headers.get("x-forwarded-for");
+            if (forwarded !== null) {
+                // Il peut y avoir plusieurs adresses séparées par des virgules : la première est celle du client
+                const first = forwarded.split(",")[0].trim();
+                if (first !== "" && first.length <= 64) {
+                    return first;
+                }
             }
+
+            const realIp = req.headers.get("x-real-ip");
+            if (realIp !== null) {
+                const cleaned = realIp.trim();
+                if (cleaned !== "" && cleaned.length <= 64) {
+                    return cleaned;
+                }
+            }
+
+            return null;
         }
 
-        const realIp = req.headers.get("x-real-ip");
-        if (realIp !== null) {
-            const cleaned = realIp.trim();
-            if (cleaned !== "" && cleaned.length <= 64) {
-                return cleaned;
-            }
+        if (process.env.NODE_ENV !== "production") {
+            return "local";
         }
 
         return null;

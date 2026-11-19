@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { UserRepository, NewUserData, NewVerificationData } from "@/repositories/user.repository";
 import { EmailVerificationRepository } from "@/repositories/email-verification.repository";
 import { RateLimitService } from "@/services/rate-limit.service";
@@ -12,7 +13,15 @@ import {
     RESEND_DELAY_SECONDS,
     UNVERIFIED_ACCOUNT_LIFETIME_HOURS,
 } from "@/lib/verification-code";
-import { LOGIN_BY_EMAIL_RULE, LOGIN_BY_IP_RULE } from "@/lib/rate-limit-rules";
+import {
+    LOGIN_BY_PAIR_RULE,
+    LOGIN_BY_EMAIL_RULE,
+    LOGIN_BY_IP_RULE,
+    REGISTER_BY_IP_RULE,
+    VERIFY_BY_IP_RULE,
+    RESEND_BY_IP_RULE,
+    RateLimitRule,
+} from "@/lib/rate-limit-rules";
 import {
     ConflictError,
     ForbiddenError,
@@ -98,7 +107,9 @@ export class AuthService {
         this.rateLimitService = rateLimitService;
     }
 
-    async register(data: RegisterData): Promise<RegisterResult> {
+    async register(data: RegisterData, ipAddress: string | null): Promise<RegisterResult> {
+        await this.enforceIpLimit("register:ip:", ipAddress, REGISTER_BY_IP_RULE);
+
         const now = new Date();
 
         // Nettoyage au passage : on supprime les comptes jamais vérifiés depuis trop longtemps
@@ -194,7 +205,9 @@ export class AuthService {
     }
 
     // Vérifie le code reçu par email. Si tout est bon, le compte devient vérifié et on renvoie l'utilisateur.
-    async verifyEmail(data: VerifyEmailData): Promise<AuthUser> {
+    async verifyEmail(data: VerifyEmailData, ipAddress: string | null): Promise<AuthUser> {
+        await this.enforceIpLimit("verify:ip:", ipAddress, VERIFY_BY_IP_RULE);
+
         // Un seul message pour tous les cas d'échec : on ne révèle pas si un compte existe
         const invalidMessage = "Code invalide ou expiré";
 
@@ -230,7 +243,9 @@ export class AuthService {
 
     // Envoie un nouveau code. La réponse est toujours la même, que l'email existe ou non :
     // si on ne peut pas envoyer (compte inconnu, déjà vérifié, trop tôt), on ne fait rien.
-    async resendCode(email: string): Promise<void> {
+    async resendCode(email: string, ipAddress: string | null): Promise<void> {
+        await this.enforceIpLimit("resend:ip:", ipAddress, RESEND_BY_IP_RULE);
+
         const user = await this.userRepository.findByEmail(email);
 
         if (!user || user.emailVerifiedAt !== null) {
@@ -262,15 +277,24 @@ export class AuthService {
     // ipAddress vaut null quand on n'a pas pu lire l'adresse du client : on ne limite alors que par email.
     async login(data: LoginData, ipAddress: string | null): Promise<AuthUser> {
         const emailKey = "login:email:" + data.email;
+        const pairKey = this.getPairKey(data.email, ipAddress);
 
-        // Étape 1 : est-ce que cet email ou cette adresse IP est bloqué ? On prend le temps d'attente le plus long.
+        // Étape 1 : est-ce que ce couple email + adresse, cette adresse ou cet email (garde-fou) est bloqué ?
+        // On prend le temps d'attente le plus long.
         // Cette vérification passe AVANT le mot de passe : pendant un blocage, même le bon mot de passe est refusé.
-        let waitSeconds = await this.rateLimitService.getRetryAfterSeconds(emailKey);
-
+        const keysToCheck: string[] = [emailKey];
+        if (pairKey !== null) {
+            keysToCheck.push(pairKey);
+        }
         if (ipAddress !== null) {
-            const ipWaitSeconds = await this.rateLimitService.getRetryAfterSeconds("login:ip:" + ipAddress);
-            if (ipWaitSeconds > waitSeconds) {
-                waitSeconds = ipWaitSeconds;
+            keysToCheck.push("login:ip:" + ipAddress);
+        }
+
+        let waitSeconds = 0;
+        for (const key of keysToCheck) {
+            const keyWaitSeconds = await this.rateLimitService.getRetryAfterSeconds(key);
+            if (keyWaitSeconds > waitSeconds) {
+                waitSeconds = keyWaitSeconds;
             }
         }
 
@@ -307,8 +331,11 @@ export class AuthService {
             );
         }
 
-        // Réussite : les échecs de cet email sont oubliés (ceux de l'adresse IP restent)
+        // Réussite : les échecs de cet email et de ce couple sont oubliés (ceux de l'adresse IP restent)
         await this.rateLimitService.reset(emailKey);
+        if (pairKey !== null) {
+            await this.rateLimitService.reset(pairKey);
+        }
 
         return this.toAuthUser(user);
     }
@@ -323,13 +350,43 @@ export class AuthService {
         return this.toAuthUser(user);
     }
 
-    // Enregistre un échec de connexion pour l'email, et pour l'adresse IP si on la connaît
+    // Enregistre un échec de connexion : pour l'email (garde-fou), et si on connaît l'adresse IP
+    // pour le couple email + adresse et pour l'adresse seule
     private async registerLoginFailure(email: string, ipAddress: string | null): Promise<void> {
         await this.rateLimitService.registerFailure("login:email:" + email, LOGIN_BY_EMAIL_RULE);
 
-        if (ipAddress !== null) {
+        const pairKey = this.getPairKey(email, ipAddress);
+        if (pairKey !== null && ipAddress !== null) {
+            await this.rateLimitService.registerFailure(pairKey, LOGIN_BY_PAIR_RULE);
             await this.rateLimitService.registerFailure("login:ip:" + ipAddress, LOGIN_BY_IP_RULE);
         }
+    }
+
+    // La clé du couple email + adresse IP (null si l'adresse est inconnue).
+    // Elle est hachée : un email (255) plus une adresse (64) dépasseraient la taille de la colonne (320).
+    private getPairKey(email: string, ipAddress: string | null): string | null {
+        if (ipAddress === null) {
+            return null;
+        }
+        return "login:pair:" + createHash("sha256").update(email + "|" + ipAddress).digest("hex");
+    }
+
+    // Limite le nombre de demandes d'une même adresse IP (inscription, vérification, renvoi de code).
+    // Chaque demande compte, réussie ou non. Sans adresse connue, on ne limite pas (on ne peut pas se fier à rien).
+    private async enforceIpLimit(prefix: string, ipAddress: string | null, rule: RateLimitRule): Promise<void> {
+        if (ipAddress === null) {
+            return;
+        }
+
+        const key = prefix + ipAddress;
+        const waitSeconds = await this.rateLimitService.getRetryAfterSeconds(key);
+
+        if (waitSeconds > 0) {
+            const minutes = Math.ceil(waitSeconds / 60);
+            throw new TooManyRequestsError("Trop de demandes. Réessayez dans " + minutes + " minute(s).", waitSeconds);
+        }
+
+        await this.rateLimitService.registerFailure(key, rule);
     }
 
     // Le hash factice est calculé la première fois qu'on en a besoin, puis gardé
