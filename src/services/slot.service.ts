@@ -12,9 +12,7 @@ import {
     timeColumnToMinutes,
     dateColumnToText,
 } from "@/lib/datetime";
-
-// On propose un créneau toutes les 15 minutes
-const SLOT_STEP_MINUTES = 15;
+import { SLOT_STEP_MINUTES, TimeBlock, mergeTimeBlocks } from "@/lib/slot-grid";
 
 // Un créneau libre : instants en UTC pour réserver, heures locales pour l'affichage
 export interface SlotItem {
@@ -32,12 +30,6 @@ export interface SlotsResult {
     duration: number;
     price: number;
     slots: SlotItem[];
-}
-
-// Une plage de travail, en minutes depuis minuit (heure locale)
-interface TimeBlock {
-    start: number;
-    end: number;
 }
 
 // Une période déjà occupée (absence ou rendez-vous), en millisecondes UTC
@@ -168,28 +160,7 @@ export class SlotService {
         }
 
         // On trie par heure de début, puis on fusionne celles qui se touchent ou se chevauchent
-        validBlocks.sort(function (a, b) {
-            return a.start - b.start;
-        });
-
-        const merged: TimeBlock[] = [];
-        for (const block of validBlocks) {
-            if (merged.length === 0) {
-                merged.push({ start: block.start, end: block.end });
-            } else {
-                const last = merged[merged.length - 1];
-
-                if (block.start <= last.end) {
-                    if (block.end > last.end) {
-                        last.end = block.end;
-                    }
-                } else {
-                    merged.push({ start: block.start, end: block.end });
-                }
-            }
-        }
-
-        return merged;
+        return mergeTimeBlocks(validBlocks);
     }
 
     // Les périodes occupées du jour : indisponibilités et rendez-vous non annulés
