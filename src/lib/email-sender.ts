@@ -3,6 +3,9 @@
 // sans toucher à la logique d'inscription.
 export interface EmailSender {
   sendVerificationCode(email: string, code: string): Promise<void>;
+
+  // Prévient le propriétaire d'une adresse que quelqu'un a essayé de s'inscrire avec elle alors qu'elle a déjà un compte
+  sendAccountExistsNotice(email: string): Promise<void>;
 }
 
 // Faux envoyeur pour le développement : il affiche le code dans la console du serveur.
@@ -20,5 +23,13 @@ export class ConsoleEmailSender implements EmailSender {
     }
 
     console.log("[EMAIL FACTICE] Code de vérification pour " + email + " : " + code);
+  }
+
+  async sendAccountExistsNotice(email: string): Promise<void> {
+    if (this.isProduction) {
+      throw new Error("L'envoi factice d'emails est interdit en production : configurez SMTP (EMAIL_SENDER=smtp).");
+    }
+
+    console.log("[EMAIL FACTICE] Avis \"compte déjà existant\" envoyé à " + email);
   }
 }

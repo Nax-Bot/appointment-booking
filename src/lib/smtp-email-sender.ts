@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import type { EmailSender } from "@/lib/email-sender";
 import type { SmtpConfig } from "@/lib/smtp-config";
-import { buildVerificationEmail } from "@/lib/email-templates";
+import { buildVerificationEmail, buildAccountExistsEmail } from "@/lib/email-templates";
 import { CODE_LIFETIME_MINUTES } from "@/lib/verification-code";
 
 // Un vrai envoyeur d'emails, par SMTP
@@ -18,6 +18,19 @@ export class SmtpEmailSender implements EmailSender {
 
     async sendVerificationCode(email: string, code: string): Promise<void> {
         const content = buildVerificationEmail(code, CODE_LIFETIME_MINUTES);
+        const transporter = this.getTransporter();
+
+        await transporter.sendMail({
+            from: this.config.from,
+            to: email,
+            subject: content.subject,
+            text: content.text,
+            html: content.html,
+        });
+    }
+
+    async sendAccountExistsNotice(email: string): Promise<void> {
+        const content = buildAccountExistsEmail();
         const transporter = this.getTransporter();
 
         await transporter.sendMail({
