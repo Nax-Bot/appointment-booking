@@ -1,16 +1,19 @@
 import { UnavailabilityService, UnavailabilityInput } from '../../services/unavailability.service';
 import type { UnavailabilityRepository } from '../../repositories/unavailability.repository';
 import type { ProfessionalRepository } from '../../repositories/professional.repository';
+import type { AppointmentRepository } from '../../repositories/appointment.repository';
 
 import { ConflictError, NotFoundError, ValidationError } from '../../lib/errors';
 
 jest.mock('../../repositories/unavailability.repository', () => ({}));
 jest.mock('../../repositories/professional.repository', () => ({}));
+jest.mock('../../repositories/appointment.repository', () => ({}));
 
 type FakeRepository = Record<string, jest.Mock>;
 
 let fakeUnavailabilityRepository: FakeRepository;
 let fakeProfessionalRepository: FakeRepository;
+let fakeAppointmentRepository: FakeRepository;
 let unavailabilityService: UnavailabilityService;
 
 const PROFESSIONAL_ID = 5;
@@ -35,6 +38,11 @@ beforeEach(() => {
         findById: jest.fn().mockResolvedValue({ userId: PROFESSIONAL_ID }),
     };
 
+    // Par défaut : aucun rendez-vous actif sur la période
+    fakeAppointmentRepository = {
+        findActiveOverlapping: jest.fn().mockResolvedValue([]),
+    };
+
     fakeUnavailabilityRepository = {
         findByProfessional: jest.fn().mockResolvedValue([]),
         findOverlapping: jest.fn().mockResolvedValue([]),
@@ -52,7 +60,8 @@ beforeEach(() => {
 
     unavailabilityService = new UnavailabilityService(
         fakeUnavailabilityRepository as unknown as UnavailabilityRepository,
-        fakeProfessionalRepository as unknown as ProfessionalRepository
+        fakeProfessionalRepository as unknown as ProfessionalRepository,
+        fakeAppointmentRepository as unknown as AppointmentRepository
     );
 });
 
@@ -208,5 +217,51 @@ describe("UnavailabilityService.listByProfessional", () => {
             { id: 1, startDatetime: "2026-11-10T05:00:00.000Z", endDatetime: "2026-11-10T15:00:00.000Z", reason: "Congé" },
             { id: 2, startDatetime: "2026-12-24T00:00:00.000Z", endDatetime: "2026-12-26T00:00:00.000Z", reason: null },
         ]);
+    });
+});
+
+describe("UnavailabilityService : protection des rendez-vous existants", () => {
+    const BOOKED = { id: 7, startDatetime: new Date("2026-11-23T06:00:00.000Z"), endDatetime: new Date("2026-11-23T07:00:00.000Z") };
+
+    test("refuse une absence qui recouvre un rendez-vous actif, et le liste", async () => {
+        fakeAppointmentRepository.findActiveOverlapping.mockResolvedValue([BOOKED]);
+
+        const promise = unavailabilityService.create(
+            PROFESSIONAL_ID,
+            makeInput("2026-11-23T00:00:00+03:00", "2026-11-23T23:00:00+03:00")
+        );
+
+        await expect(promise).rejects.toThrow(ConflictError);
+        await expect(promise).rejects.toMatchObject({ details: ["rendez-vous #7 : 2026-11-23 à 09:00"] });
+        expect(fakeUnavailabilityRepository.create).not.toHaveBeenCalled();
+    });
+
+    test("cherche les rendez-vous sur la période exacte de l'absence", async () => {
+        await unavailabilityService.create(
+            PROFESSIONAL_ID,
+            makeInput("2026-11-23T00:00:00+03:00", "2026-11-23T23:00:00+03:00")
+        );
+
+        expect(fakeAppointmentRepository.findActiveOverlapping).toHaveBeenCalledWith(
+            PROFESSIONAL_ID,
+            new Date("2026-11-22T21:00:00.000Z"),
+            new Date("2026-11-23T20:00:00.000Z")
+        );
+    });
+
+    test("refuse aussi une modification qui recouvre un rendez-vous actif", async () => {
+        fakeUnavailabilityRepository.findOwned.mockResolvedValue(
+            makeRow(1, "2026-12-24T00:00:00.000Z", "2026-12-26T00:00:00.000Z")
+        );
+        fakeAppointmentRepository.findActiveOverlapping.mockResolvedValue([BOOKED]);
+
+        await expect(
+            unavailabilityService.update(
+                PROFESSIONAL_ID,
+                1,
+                makeInput("2026-11-23T00:00:00+03:00", "2026-11-23T23:00:00+03:00")
+            )
+        ).rejects.toThrow(ConflictError);
+        expect(fakeUnavailabilityRepository.update).not.toHaveBeenCalled();
     });
 });

@@ -1,16 +1,19 @@
 import { AvailabilityService, AvailabilityInput } from "../../services/availability.service";
 import { AvailabilityRepository } from "../../repositories/availability.repository";
 import { ProfessionalRepository } from "../../repositories/professional.repository";
+import { AppointmentRepository } from "../../repositories/appointment.repository";
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors";
 
 jest.mock("../../repositories/availability.repository", () => ({}));
 jest.mock("../../repositories/professional.repository", () => ({}));
+jest.mock("../../repositories/appointment.repository", () => ({}));
 
 
 type FakeRepository = Record<string, jest.Mock>;
 
 let fakeAvailabilityRepository: FakeRepository;
 let fakeProfessionalRepository: FakeRepository;
+let fakeAppointmentRepository: FakeRepository;
 let availabilityService: AvailabilityService;
 
 const PROFESSIONAL_ID = 5;
@@ -64,6 +67,11 @@ beforeEach(() => {
         findById: jest.fn().mockResolvedValue({ userId: PROFESSIONAL_ID }),
     };
 
+    // Par défaut : aucun rendez-vous actif à venir
+    fakeAppointmentRepository = {
+        findActiveEndingAfter: jest.fn().mockResolvedValue([]),
+    };
+
     fakeAvailabilityRepository = {
         findByProfessional: jest.fn().mockResolvedValue([]),
         findByProfessionalAndDay: jest.fn().mockResolvedValue([]),
@@ -82,9 +90,15 @@ beforeEach(() => {
 
     availabilityService = new AvailabilityService(
         fakeAvailabilityRepository as unknown as AvailabilityRepository,
-        fakeProfessionalRepository as unknown as ProfessionalRepository
+        fakeProfessionalRepository as unknown as ProfessionalRepository,
+        fakeAppointmentRepository as unknown as AppointmentRepository
     );
 });
+
+// Un rendez-vous actif à venir, tel que le repository le renvoie (dates en UTC)
+function makeAppointment(id: number, start: string, end: string) {
+    return { id: id, startDatetime: new Date(start), endDatetime: new Date(end) };
+}
 
 describe("AvailabilityService.create", () => {
     test("cree une plage : renvoie des heures en texte et les enregistre sans conversion de fuseau horaire", async () => {
@@ -297,5 +311,72 @@ describe("AvailabilityService.listByProfessional", () => {
             { id: 1, dayOfWeek: 1, startTime: "08:00", endTime: "12:00", validFrom: "2026-11-01", validTo: "2026-11-30" },
             { id: 2, dayOfWeek: 2, startTime: "14:00", endTime: "18:00", validFrom: null, validTo: null },
         ]);
+    });
+});
+
+// Le lundi 2026-11-23, 09:00-10:00 heure locale (UTC+3) = 06:00-07:00 UTC
+describe("AvailabilityService : protection des rendez-vous existants", () => {
+    const MONDAY_9_TO_10 = makeAppointment(7, "2026-11-23T06:00:00.000Z", "2026-11-23T07:00:00.000Z");
+
+    test("refuse de supprimer la seule plage qui couvre un rendez-vous à venir", async () => {
+        const row = makeRow(1, 1, "08:00", "12:00");
+        fakeAvailabilityRepository.findOwned.mockResolvedValue(row);
+        fakeAvailabilityRepository.findByProfessional.mockResolvedValue([row]);
+        fakeAppointmentRepository.findActiveEndingAfter.mockResolvedValue([MONDAY_9_TO_10]);
+
+        await expect(availabilityService.remove(PROFESSIONAL_ID, 1)).rejects.toThrow(ConflictError);
+        expect(fakeAvailabilityRepository.delete).not.toHaveBeenCalled();
+    });
+
+    test("autorise la suppression si une autre plage couvre encore le rendez-vous", async () => {
+        const row = makeRow(1, 1, "08:00", "12:00");
+        const other = makeRow(2, 1, "08:00", "18:00");
+        fakeAvailabilityRepository.findOwned.mockResolvedValue(row);
+        fakeAvailabilityRepository.findByProfessional.mockResolvedValue([row, other]);
+        fakeAppointmentRepository.findActiveEndingAfter.mockResolvedValue([MONDAY_9_TO_10]);
+
+        await availabilityService.remove(PROFESSIONAL_ID, 1);
+
+        expect(fakeAvailabilityRepository.delete).toHaveBeenCalledWith(1);
+    });
+
+    test("ne bloque pas pour un rendez-vous déjà hors horaires (ajouté à la main)", async () => {
+        const row = makeRow(1, 1, "08:00", "12:00");
+        fakeAvailabilityRepository.findOwned.mockResolvedValue(row);
+        fakeAvailabilityRepository.findByProfessional.mockResolvedValue([row]);
+        // 15:00-16:00 locales : hors de la plage 08:00-12:00 dès le départ
+        fakeAppointmentRepository.findActiveEndingAfter.mockResolvedValue([
+            makeAppointment(8, "2026-11-23T12:00:00.000Z", "2026-11-23T13:00:00.000Z"),
+        ]);
+
+        await availabilityService.remove(PROFESSIONAL_ID, 1);
+
+        expect(fakeAvailabilityRepository.delete).toHaveBeenCalledWith(1);
+    });
+
+    test("refuse de réduire une plage de façon à laisser un rendez-vous dehors", async () => {
+        const row = makeRow(1, 1, "08:00", "12:00");
+        fakeAvailabilityRepository.findOwned.mockResolvedValue(row);
+        fakeAvailabilityRepository.findByProfessional.mockResolvedValue([row]);
+        fakeAvailabilityRepository.findByProfessionalAndDay.mockResolvedValue([row]);
+        fakeAppointmentRepository.findActiveEndingAfter.mockResolvedValue([MONDAY_9_TO_10]);
+
+        // 10:00-12:00 ne couvre plus le rendez-vous de 09:00-10:00
+        await expect(
+            availabilityService.update(PROFESSIONAL_ID, 1, makeInput("10:00", "12:00"))
+        ).rejects.toThrow(ConflictError);
+        expect(fakeAvailabilityRepository.update).not.toHaveBeenCalled();
+    });
+
+    test("autorise une modification qui couvre encore le rendez-vous", async () => {
+        const row = makeRow(1, 1, "08:00", "12:00");
+        fakeAvailabilityRepository.findOwned.mockResolvedValue(row);
+        fakeAvailabilityRepository.findByProfessional.mockResolvedValue([row]);
+        fakeAvailabilityRepository.findByProfessionalAndDay.mockResolvedValue([row]);
+        fakeAppointmentRepository.findActiveEndingAfter.mockResolvedValue([MONDAY_9_TO_10]);
+
+        await availabilityService.update(PROFESSIONAL_ID, 1, makeInput("08:30", "12:00"));
+
+        expect(fakeAvailabilityRepository.update).toHaveBeenCalled();
     });
 });
