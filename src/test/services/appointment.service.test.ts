@@ -314,3 +314,46 @@ describe("AppointmentService.create : refus", () => {
         expect(fakeAppointmentRepository.create).not.toHaveBeenCalled();
     });
 });
+
+
+describe("AppointmentService.create : grille des créneaux", () => {
+    test("refuse un début qui ne tombe pas sur la grille de 15 minutes (09:07)", async () => {
+        await expect(
+            appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:07:00+03:00"))
+        ).rejects.toThrow(ValidationError);
+        expect(fakeAppointmentRepository.create).not.toHaveBeenCalled();
+    });
+
+    test("accepte un début sur la grille (09:15)", async () => {
+        const result = await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:15:00+03:00"));
+
+        expect(result.startDatetime).toBe("2026-11-09T06:15:00.000Z");
+    });
+
+    test("la grille part du début de la plage : 08:10 -> 08:10, 08:25... (pas 08:15)", async () => {
+        fakeAvailabilityRepository.findByProfessionalAndDay.mockResolvedValue(
+            makeAvailabilities([["08:10", "12:00"]])
+        );
+
+        const accepted = await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T08:25:00+03:00"));
+        expect(accepted.status).toBe("PENDING");
+
+        await expect(
+            appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T08:15:00+03:00"))
+        ).rejects.toThrow(ValidationError);
+    });
+
+    test("deux plages qui se touchent forment une seule grille", async () => {
+        // 08:00-10:10 puis 10:10-12:00 : la grille part de 08:00, donc 10:15 est valide et 10:10 ne l'est pas
+        fakeAvailabilityRepository.findByProfessionalAndDay.mockResolvedValue(
+            makeAvailabilities([["08:00", "10:10"], ["10:10", "12:00"]])
+        );
+
+        const accepted = await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T10:15:00+03:00"));
+        expect(accepted.status).toBe("PENDING");
+
+        await expect(
+            appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T10:10:00+03:00"))
+        ).rejects.toThrow(ValidationError);
+    });
+});
