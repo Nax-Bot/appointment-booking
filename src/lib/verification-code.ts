@@ -1,4 +1,5 @@
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 // Les réglages de la vérification d'email, rangés au même endroit
 export const CODE_LIFETIME_MINUTES = 10;
@@ -15,11 +16,7 @@ export function generateCode(): string {
 
 // Lit le secret dans .env
 function getSecret(): string {
-    const secret = process.env.AUTH_SECRET;
-    if (!secret) {
-        throw new Error("AUTH_SECRET est manquant dans le fichier .env");
-    }
-    return secret;
+    return getAuthSecret();
 }
 
 // Calcule l'empreinte d'un code. Le secret du serveur est mélangé au calcul :

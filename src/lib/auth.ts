@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 // Les deux rôles possibles
 export type Role = "CLIENT" | "PROFESSIONAL";
@@ -12,11 +13,7 @@ export interface SessionData {
 
 // Lit le secret dans .env et le convertit pour jose
 function getSecretKey() {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_SECRET est manquant dans le fichier .env");
-  }
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(getAuthSecret());
 }
 
 // Transforme un mot de passe en hash (on ne stocke JAMAIS le mot de passe en clair)
