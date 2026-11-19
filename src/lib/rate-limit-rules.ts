@@ -50,3 +50,9 @@ export const RESEND_BY_IP_RULE: RateLimitRule = {
     windowSeconds: 15 * 60,
     blockSeconds: 15 * 60,
 };
+// Avis "compte déjà existant" : au plus UN email par heure et par adresse, pour ne pas inonder la boîte de quelqu'un
+export const ACCOUNT_NOTICE_RULE: RateLimitRule = {
+    maxFailures: 1,
+    windowSeconds: 60 * 60,
+    blockSeconds: 60 * 60,
+};

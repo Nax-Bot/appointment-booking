@@ -20,6 +20,7 @@ import {
     REGISTER_BY_IP_RULE,
     VERIFY_BY_IP_RULE,
     RESEND_BY_IP_RULE,
+    ACCOUNT_NOTICE_RULE,
     RateLimitRule,
 } from "@/lib/rate-limit-rules";
 import {
@@ -116,6 +117,10 @@ export class AuthService {
         const limit = new Date(now.getTime() - UNVERIFIED_ACCOUNT_LIFETIME_HOURS * 60 * 60 * 1000);
         await this.userRepository.deleteUnverifiedCreatedBefore(limit);
 
+        // Le hachage du mot de passe (lent) est fait AVANT de regarder si l'email existe :
+        // ainsi la réponse prend le même temps, que l'email soit déjà utilisé ou non.
+        const passwordHash = await hashPassword(data.password);
+
         // Email -> un seul compte
         const existingUser = await this.userRepository.findByEmail(data.email);
 
@@ -124,21 +129,29 @@ export class AuthService {
             // Tout autre compte est considéré comme vraiment pris, même si sa date de vérification est vide :
             // cela protège les comptes créés avant la vérification d'email.
             if (existingUser.emailVerifiedAt !== null || existingUser.emailVerification === null) {
-                throw new ConflictError("Cet email est déjà utilisé");
+                // En développement sans vérification d'email, on garde le message clair (pratique pour tester)
+                if (this.requireEmailVerification === false) {
+                    throw new ConflictError("Cet email est déjà utilisé");
+                }
+
+                // Sinon on ne révèle PAS que l'email existe : la réponse est la même que pour une inscription normale,
+                // et c'est le propriétaire de l'adresse qui est prévenu par email.
+                await this.notifyAccountExists(data.email);
+                return { email: data.email, verificationRequired: true, user: null };
             }
 
-            // Un compte NON vérifié : on empêche d'inonder la boîte mail de quelqu'un
+            // Un compte NON vérifié : on empêche d'inonder la boîte mail de quelqu'un.
+            // La réponse reste la même qu'une inscription normale (pas d'erreur qui révélerait un compte en attente).
             const waitedMs = now.getTime() - existingUser.emailVerification.lastSentAt.getTime();
             if (waitedMs < RESEND_DELAY_SECONDS * 1000) {
-                throw new TooManyRequestsError("Un code vient d'être envoyé. Réessayez dans un instant.");
+                return { email: data.email, verificationRequired: true, user: null };
             }
 
             // Sinon, l'ancien compte non vérifié est remplacé par celui-ci
-            // (ainsi le vrai propriétaire de l'email peut toujours s'inscrire)
+            // (ainsi le vrai propriétaire de l'email peut toujours s'inscrire,
+            // même si quelqu'un a "squatté" son adresse avant lui)
             await this.userRepository.deleteById(existingUser.userId);
         }
-
-        const passwordHash = await hashPassword(data.password);
 
         let phoneNumber: string | null = null;
         if (data.phoneNumber) {
@@ -369,6 +382,24 @@ export class AuthService {
             return null;
         }
         return "login:pair:" + createHash("sha256").update(email + "|" + ipAddress).digest("hex");
+    }
+
+    // Prévient le propriétaire d'une adresse qu'on a essayé de s'inscrire avec elle.
+    // Au plus un email par heure et par adresse. Une panne d'envoi ne doit rien révéler : on l'ignore.
+    private async notifyAccountExists(email: string): Promise<void> {
+        const key = "register:notice:" + createHash("sha256").update(email).digest("hex");
+
+        const waitSeconds = await this.rateLimitService.getRetryAfterSeconds(key);
+        if (waitSeconds > 0) {
+            return;
+        }
+        await this.rateLimitService.registerFailure(key, ACCOUNT_NOTICE_RULE);
+
+        try {
+            await this.emailSender.sendAccountExistsNotice(email);
+        } catch (error) {
+            console.error("Échec de l'envoi de l'avis de compte existant :", error);
+        }
     }
 
     // Limite le nombre de demandes d'une même adresse IP (inscription, vérification, renvoi de code).
