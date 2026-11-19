@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
 import { ApiError } from "@/lib/lib-front/api-client";
-import { isEmailValid } from "@/lib/form-validation";
+import { isEmailValid, getPasswordRuleError } from "@/lib/form-validation";
 import { Role, RegisterInput } from "@/types/api";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
@@ -31,7 +31,7 @@ export default function RegisterPage() {
     const [lastNameTouched, setLastNameTouched] = useState(false);
     const [emailTouched, setEmailTouched] = useState(false);
     const [passwordTouched, setPasswordTouched] = useState(false);
-    
+
     // submitted = la personne a déjà cliqué sur le bouton : on affiche toutes les erreurs
     const [submitted, setSubmitted] = useState(false);
 
@@ -40,7 +40,7 @@ export default function RegisterPage() {
     const [submitting, setSubmitting] = useState(false);
 
     // Une fonction par champ : elle renvoie le message d'erreur, ou "" si tout va bien
-    // (mêmes limites que le backend : prénom et nom obligatoires, mot de passe 8 caractères minimum)
+    // (mêmes limites que le backend : prénom et nom obligatoires, règle du mot de passe)
     function getFirstNameError(): string {
         if (firstName.trim() === "") {
             return "Le prénom est obligatoire";
@@ -66,10 +66,7 @@ export default function RegisterPage() {
     }
 
     function getPasswordError(): string {
-        if (password.length < 8) {
-            return "Le mot de passe doit contenir au moins 8 caractères";
-        }
-        return "";
+        return getPasswordRuleError(password);
     }
 
     // On n'affiche l'erreur qu'après avoir quitté le champ, ou après un clic sur le bouton
