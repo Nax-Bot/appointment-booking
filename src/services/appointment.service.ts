@@ -6,6 +6,7 @@ import { UnavailabilityRepository } from "@/repositories/unavailability.reposito
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/datetime";
 import { Role } from "@/lib/auth";
+import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/slot-grid";
 
 // Données reçues pour réserver
 export interface CreateAppointmentInput {
@@ -91,11 +92,8 @@ interface AppointmentDetailRow {
     professional: { specialty: string | null; user: { firstName: string; lastName: string } };
 }
 
-// Une plage horaire, en minutes depuis minuit
-interface TimeBlock {
-    start: number;
-    end: number;
-}
+// Résultat de la vérification des horaires du professionnel
+type ScheduleCheck = "OK" | "OUTSIDE_HOURS" | "OFF_GRID";
 
 export class AppointmentService {
     private appointmentRepository: AppointmentRepository;
@@ -155,10 +153,19 @@ export class AppointmentService {
         // L'heure de fin est calculée
         const end = new Date(start.getTime() + duration * 60 * 1000);
 
-        // Règle 4 : le rendez-vous tient dans les disponibilités du professionnel
-        const isInside = await this.isInsideAvailabilities(input.professionalId, start, end);
-        if (isInside === false) {
+        // Règle 4 : le rendez-vous tient dans les disponibilités du professionnel,
+        // et son début correspond à un créneau réellement proposé (grille de 15 minutes)
+        const schedule = await this.checkSchedule(input.professionalId, start, end);
+        if (schedule === "OUTSIDE_HOURS") {
             throw new ConflictError("Ce créneau est en dehors des horaires du professionnel");
+        }
+        if (schedule === "OFF_GRID") {
+            throw new ValidationError(
+                "Le début du rendez-vous doit correspondre à un créneau proposé (toutes les " +
+                SLOT_STEP_MINUTES +
+                " minutes à partir de l'ouverture)",
+                []
+            );
         }
 
         // Règle 5 : pas d'indisponibilité sur la période
@@ -327,14 +334,17 @@ export class AppointmentService {
         return false;
     }
 
-    // Vérifie que tout le rendez-vous est couvert par les disponibilités du jour (heure locale)
-    private async isInsideAvailabilities(professionalId: number, start: Date, end: Date): Promise<boolean> {
+    // Vérifie les horaires du professionnel pour ce rendez-vous (heure locale) :
+    // - "OUTSIDE_HOURS" : le rendez-vous n'est pas entièrement couvert par ses disponibilités
+    // - "OFF_GRID" : il est couvert, mais son début ne tombe pas sur un créneau proposé
+    // - "OK" : tout est bon
+    private async checkSchedule(professionalId: number, start: Date, end: Date): Promise<ScheduleCheck> {
         const startLocal = toLocalMoment(start);
         const endLocal = toLocalMoment(end);
 
         // Un rendez-vous qui passe minuit ne peut pas tenir dans une disponibilité
         if (endLocal.dateText !== startLocal.dateText) {
-            return false;
+            return "OUTSIDE_HOURS";
         }
 
         const blocks = await this.availabilityRepository.findByProfessionalAndDay(professionalId, startLocal.dayOfWeek);
@@ -375,7 +385,17 @@ export class AppointmentService {
             }
         }
 
-        return current >= endLocal.minutes;
+        if (current < endLocal.minutes) {
+            return "OUTSIDE_HOURS";
+        }
+
+        // Même calcul que SlotService : les créneaux partent du début de la plage fusionnée
+        const mergedBlocks = mergeTimeBlocks(validBlocks);
+        if (isOnSlotGrid(mergedBlocks, startLocal.minutes) === false) {
+            return "OFF_GRID";
+        }
+
+        return "OK";
     }
 
     // Transforme un rendez-vous tout juste créé en réponse simple (dates en UTC, prix en nombre)
