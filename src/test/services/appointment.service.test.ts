@@ -5,6 +5,7 @@ import type { OfferRepository } from "../../repositories/offer.repository";
 import type { AvailabilityRepository } from "../../repositories/availability.repository";
 import type { UnavailabilityRepository } from "../../repositories/unavailability.repository";
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors";
+import type { TransactionRunner } from "../../lib/transaction-runner";
 
 // On ne charge jamais les vrais repositories (ni Prisma) ni lib/auth
 jest.mock("../../repositories/appointment.repository", () => ({}));
@@ -13,6 +14,7 @@ jest.mock("../../repositories/offer.repository", () => ({}));
 jest.mock("../../repositories/availability.repository", () => ({}));
 jest.mock("../../repositories/unavailability.repository", () => ({}));
 jest.mock("../../lib/auth", () => ({}));
+jest.mock("../../lib/transaction-runner", () => ({}));
 
 // Un faux repository : un objet dont chaque propriété est une fonction espionne
 type FakeRepository = Record<string, jest.Mock>;
@@ -22,7 +24,11 @@ let fakeProfessionalRepository: FakeRepository;
 let fakeOfferRepository: FakeRepository;
 let fakeAvailabilityRepository: FakeRepository;
 let fakeUnavailabilityRepository: FakeRepository;
+let fakeTransactionRunner: TransactionRunner;
 let appointmentService: AppointmentService;
+
+// Une fausse transaction : un objet reconnaissable, que le faux moteur donne au travail à exécuter
+const fakeTransaction = { name: "fake-transaction" };
 
 // "Maintenant" pour tous les tests : mercredi 28 octobre 2026, 09:00 UTC
 const NOW = new Date("2026-10-28T09:00:00.000Z").getTime();
@@ -94,6 +100,8 @@ beforeEach(() => {
     // travaille le lundi de 08:00 à 12:00 puis de 12:00 à 14:00, et rien n'est déjà pris
     fakeProfessionalRepository = {
         findById: jest.fn().mockResolvedValue({ userId: 5 }),
+        // Le verrou du professionnel : true = il existe
+        lockById: jest.fn().mockResolvedValue(true),
     };
     fakeOfferRepository = {
         findOne: jest.fn().mockResolvedValue(makeOffer()),
@@ -115,18 +123,35 @@ beforeEach(() => {
             location: null,
             ...data,
         })),
+        createManual: jest.fn().mockImplementation(async (data: Record<string, unknown>) => ({
+            id: 11,
+            location: null,
+            cancelledAt: null,
+            cancellationReason: null,
+            clientId: null,
+            client: null,
+            service: { id: 3, name: "Consultation générale" },
+            professional: { specialty: null, user: { firstName: "Jean", lastName: "Rakoto" } },
+            ...data,
+        })),
         findForClient: jest.fn(),
         findForProfessional: jest.fn(),
         findById: jest.fn(),
         cancel: jest.fn(),
     };
 
+    // Le faux moteur exécute le travail tout de suite, avec la fausse transaction
+    fakeTransactionRunner = {
+        run: jest.fn().mockImplementation(async (work: (db: unknown) => Promise<unknown>) => work(fakeTransaction)),
+    } as unknown as TransactionRunner;
+
     appointmentService = new AppointmentService(
         fakeAppointmentRepository as unknown as AppointmentRepository,
         fakeProfessionalRepository as unknown as ProfessionalRepository,
         fakeOfferRepository as unknown as OfferRepository,
         fakeAvailabilityRepository as unknown as AvailabilityRepository,
-        fakeUnavailabilityRepository as unknown as UnavailabilityRepository
+        fakeUnavailabilityRepository as unknown as UnavailabilityRepository,
+        fakeTransactionRunner
     );
 });
 
@@ -157,7 +182,8 @@ describe("AppointmentService.create : cas valides", () => {
         const start = new Date("2026-11-09T06:00:00.000Z");
         const end = new Date("2026-11-09T06:30:00.000Z");
         expect(fakeUnavailabilityRepository.findOverlapping).toHaveBeenCalledWith(5, start, end);
-        expect(fakeAppointmentRepository.findOverlapping).toHaveBeenCalledWith(5, start, end);
+        // Le contrôle des autres rendez-vous se fait dans la transaction (4e argument)
+        expect(fakeAppointmentRepository.findOverlapping).toHaveBeenCalledWith(5, start, end, fakeTransaction);
     });
 
     test("utilise la durée et le prix personnalisés de l'offre", async () => {
@@ -195,7 +221,8 @@ describe("AppointmentService.create : cas valides", () => {
         });
 
         expect(fakeAppointmentRepository.create).toHaveBeenCalledWith(
-            expect.objectContaining({ notes: "Première visite" })
+            expect.objectContaining({ notes: "Première visite" }),
+            fakeTransaction
         );
     });
 
@@ -203,7 +230,8 @@ describe("AppointmentService.create : cas valides", () => {
         await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"));
 
         expect(fakeAppointmentRepository.create).toHaveBeenCalledWith(
-            expect.objectContaining({ notes: null })
+            expect.objectContaining({ notes: null }),
+            fakeTransaction
         );
     });
 });
@@ -315,7 +343,6 @@ describe("AppointmentService.create : refus", () => {
     });
 });
 
-
 describe("AppointmentService.create : grille des créneaux", () => {
     test("refuse un début qui ne tombe pas sur la grille de 15 minutes (09:07)", async () => {
         await expect(
@@ -355,5 +382,76 @@ describe("AppointmentService.create : grille des créneaux", () => {
         await expect(
             appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T10:10:00+03:00"))
         ).rejects.toThrow(ValidationError);
+    });
+});
+
+describe("AppointmentService.create : protection contre la double réservation", () => {
+    test("verrouille le professionnel AVANT de chercher les rendez-vous qui se chevauchent", async () => {
+        await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"));
+
+        const lockOrder = fakeProfessionalRepository.lockById.mock.invocationCallOrder[0];
+        const overlapOrder = fakeAppointmentRepository.findOverlapping.mock.invocationCallOrder[0];
+        const createOrder = fakeAppointmentRepository.create.mock.invocationCallOrder[0];
+
+        expect(lockOrder).toBeLessThan(overlapOrder);
+        expect(overlapOrder).toBeLessThan(createOrder);
+    });
+
+    test("le verrou, le contrôle et l'insertion utilisent la même transaction", async () => {
+        await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"));
+
+        expect(fakeTransactionRunner.run).toHaveBeenCalledTimes(1);
+        expect(fakeProfessionalRepository.lockById).toHaveBeenCalledWith(5, fakeTransaction);
+        expect(fakeAppointmentRepository.findOverlapping).toHaveBeenLastCalledWith(
+            5,
+            expect.any(Date),
+            expect.any(Date),
+            fakeTransaction
+        );
+        expect(fakeAppointmentRepository.create).toHaveBeenCalledWith(expect.anything(), fakeTransaction);
+    });
+
+    test("refuse si un rendez-vous existe déjà quand le verrou est obtenu (le perdant de la course)", async () => {
+        fakeAppointmentRepository.findOverlapping.mockResolvedValue([{ id: 99 }]);
+
+        await expect(
+            appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"))
+        ).rejects.toThrow(ConflictError);
+        expect(fakeAppointmentRepository.create).not.toHaveBeenCalled();
+    });
+
+    test("refuse un professionnel supprimé entre-temps (verrou sans résultat)", async () => {
+        fakeProfessionalRepository.lockById.mockResolvedValue(false);
+
+        await expect(
+            appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"))
+        ).rejects.toThrow(NotFoundError);
+        expect(fakeAppointmentRepository.create).not.toHaveBeenCalled();
+    });
+});
+
+describe("AppointmentService.createManual : protection contre la double réservation", () => {
+    const manualInput = { serviceId: 3, startDatetime: "2026-11-09T09:00:00+03:00", guestName: "Marie Rabe" };
+
+    test("verrouille, contrôle et insère dans la même transaction", async () => {
+        const result = await appointmentService.createManual(5, manualInput);
+
+        expect(result.status).toBe("CONFIRMED");
+        expect(fakeTransactionRunner.run).toHaveBeenCalledTimes(1);
+        expect(fakeProfessionalRepository.lockById).toHaveBeenCalledWith(5, fakeTransaction);
+
+        const lockOrder = fakeProfessionalRepository.lockById.mock.invocationCallOrder[0];
+        const overlapOrder = fakeAppointmentRepository.findOverlapping.mock.invocationCallOrder[0];
+        const createOrder = fakeAppointmentRepository.createManual.mock.invocationCallOrder[0];
+        expect(lockOrder).toBeLessThan(overlapOrder);
+        expect(overlapOrder).toBeLessThan(createOrder);
+        expect(fakeAppointmentRepository.createManual).toHaveBeenCalledWith(expect.anything(), fakeTransaction);
+    });
+
+    test("refuse un créneau déjà réservé", async () => {
+        fakeAppointmentRepository.findOverlapping.mockResolvedValue([{ id: 99 }]);
+
+        await expect(appointmentService.createManual(5, manualInput)).rejects.toThrow(ConflictError);
+        expect(fakeAppointmentRepository.createManual).not.toHaveBeenCalled();
     });
 });
