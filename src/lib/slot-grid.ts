@@ -54,3 +54,14 @@ export function isOnSlotGrid(mergedBlocks: TimeBlock[], startMinutes: number): b
     }
     return false;
 }
+
+// Vrai si tout le rendez-vous (de startMinutes à endMinutes) tient dans UNE plage fusionnée.
+// Exemple : plage 08:00-14:00 -> un rendez-vous 13:30-14:00 est couvert, 13:30-14:30 ne l'est pas.
+export function isCoveredByBlocks(mergedBlocks: TimeBlock[], startMinutes: number, endMinutes: number): boolean {
+    for (const block of mergedBlocks) {
+        if (block.start <= startMinutes && endMinutes <= block.end) {
+            return true;
+        }
+    }
+    return false;
+}
