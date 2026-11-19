@@ -10,6 +10,7 @@ import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
+import { PrismaTransactionRunner } from "@/lib/transaction-runner";
 
 import { ConsoleEmailSender, EmailSender } from "@/lib/email-sender";
 import { SmtpEmailSender } from "@/lib/smtp-email-sender";
@@ -60,6 +61,9 @@ const availabilityRepository = new AvailabilityRepository();
 const unavailabilityRepository = new UnavailabilityRepository();
 const appointmentRepository = new AppointmentRepository();
 
+// Le moteur de transactions
+const transactionRunner = new PrismaTransactionRunner();
+
 // Services
 const rateLimitService = new RateLimitService(rateLimitRepository);
 const authService = new AuthService(
@@ -79,7 +83,8 @@ const appointmentService = new AppointmentService(
     professionalRepository,
     offerRepository,
     availabilityRepository,
-    unavailabilityRepository
+    unavailabilityRepository,
+    transactionRunner
 );
 const slotService = new SlotService(
     professionalRepository,
