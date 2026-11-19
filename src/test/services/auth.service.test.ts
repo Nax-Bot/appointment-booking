@@ -4,7 +4,7 @@ import type { UserRepository } from "../../repositories/user.repository";
 import type { EmailVerificationRepository } from "../../repositories/email-verification.repository";
 import type { RateLimitRepository } from "../../repositories/rate-limit.repository";
 import type { EmailSender } from "../../lib/email-sender";
-import { TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/errors";
+import { ConflictError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/errors";
 
 jest.mock("../../repositories/user.repository", () => ({}));
 jest.mock("../../repositories/email-verification.repository", () => ({}));
@@ -26,7 +26,8 @@ const VICTIM_EMAIL = "victime@example.com";
 
 let fakeUserRepository: FakeRepository;
 let fakeEmailVerificationRepository: FakeRepository;
-let fakeEmailSender: { sendVerificationCode: jest.Mock };
+let fakeEmailSender: { sendVerificationCode: jest.Mock; sendAccountExistsNotice: jest.Mock };
+let rateLimitServiceForTests: RateLimitService;
 let authService: AuthService;
 
 // Un faux dépôt de compteurs EN MÉMOIRE : le vrai RateLimitService (la vraie logique de blocage) tourne dessus
@@ -117,9 +118,13 @@ beforeEach(() => {
         incrementAttempts: jest.fn().mockResolvedValue(undefined),
         upsert: jest.fn().mockResolvedValue(undefined),
     };
-    fakeEmailSender = { sendVerificationCode: jest.fn().mockResolvedValue(undefined) };
+    fakeEmailSender = {
+        sendVerificationCode: jest.fn().mockResolvedValue(undefined),
+        sendAccountExistsNotice: jest.fn().mockResolvedValue(undefined),
+    };
 
     const rateLimitService = new RateLimitService(makeInMemoryRateLimitRepository() as unknown as RateLimitRepository);
+    rateLimitServiceForTests = rateLimitService;
 
     authService = new AuthService(
         fakeUserRepository as unknown as UserRepository,
@@ -241,5 +246,93 @@ describe("AuthService : limitation par adresse sur inscription, vérification et
         }
 
         await expect(authService.resendCode("personne@example.com", "10.0.0.1")).rejects.toThrow(TooManyRequestsError);
+    });
+});
+
+describe("AuthService.register : on ne révèle pas qu'un email existe", () => {
+    function registerData(email: string) {
+        return {
+            role: "CLIENT" as const,
+            lastName: "Test",
+            firstName: "User",
+            email: email,
+            password: GOOD_PASSWORD,
+        };
+    }
+
+    test("un email déjà utilisé reçoit la MÊME réponse qu'une inscription normale", async () => {
+        const newAccount = await authService.register(registerData("nouveau@example.com"), "10.0.0.1");
+        const existingAccount = await authService.register(registerData(VICTIM_EMAIL), "10.0.0.2");
+
+        expect(existingAccount).toEqual({ email: VICTIM_EMAIL, verificationRequired: true, user: null });
+        expect(Object.keys(existingAccount)).toEqual(Object.keys(newAccount));
+    });
+
+    test("le compte existant n'est ni modifié ni remplacé", async () => {
+        await authService.register(registerData(VICTIM_EMAIL), "10.0.0.1");
+
+        expect(fakeUserRepository.deleteById).not.toHaveBeenCalled();
+        expect(fakeUserRepository.createClientUser).not.toHaveBeenCalled();
+        expect(fakeEmailSender.sendVerificationCode).not.toHaveBeenCalled();
+    });
+
+    test("le propriétaire est prévenu par email, au plus une fois par heure", async () => {
+        await authService.register(registerData(VICTIM_EMAIL), "10.0.0.1");
+        await authService.register(registerData(VICTIM_EMAIL), "10.0.0.2");
+
+        expect(fakeEmailSender.sendAccountExistsNotice).toHaveBeenCalledTimes(1);
+        expect(fakeEmailSender.sendAccountExistsNotice).toHaveBeenCalledWith(VICTIM_EMAIL);
+    });
+
+    test("une panne d'envoi de l'avis ne change pas la réponse", async () => {
+        fakeEmailSender.sendAccountExistsNotice.mockRejectedValue(new Error("SMTP en panne"));
+        jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+        await expect(authService.register(registerData(VICTIM_EMAIL), "10.0.0.1")).resolves.toEqual({
+            email: VICTIM_EMAIL,
+            verificationRequired: true,
+            user: null,
+        });
+    });
+
+    test("en développement sans vérification d'email, le message clair est conservé", async () => {
+        const devService = new AuthService(
+            fakeUserRepository as unknown as UserRepository,
+            fakeEmailVerificationRepository as unknown as EmailVerificationRepository,
+            fakeEmailSender as unknown as EmailSender,
+            false,
+            rateLimitServiceForTests
+        );
+
+        await expect(devService.register(registerData(VICTIM_EMAIL), "10.0.0.1")).rejects.toThrow(ConflictError);
+    });
+
+    test("un compte en attente inscrit il y a moins de 60 s : même réponse, rien n'est envoyé ni supprimé", async () => {
+        fakeUserRepository.findByEmail.mockResolvedValue({
+            ...makeUser(),
+            emailVerifiedAt: null,
+            emailVerification: { lastSentAt: new Date(Date.now() - 10 * 1000) },
+        });
+
+        const result = await authService.register(registerData("attente@example.com"), "10.0.0.1");
+
+        expect(result).toEqual({ email: "attente@example.com", verificationRequired: true, user: null });
+        expect(fakeUserRepository.deleteById).not.toHaveBeenCalled();
+        expect(fakeEmailSender.sendVerificationCode).not.toHaveBeenCalled();
+    });
+
+    test("un compte en attente depuis plus de 60 s est remplacé par la nouvelle inscription", async () => {
+        fakeUserRepository.findByEmail.mockResolvedValue({
+            ...makeUser(),
+            userId: 77,
+            emailVerifiedAt: null,
+            emailVerification: { lastSentAt: new Date(Date.now() - 120 * 1000) },
+        });
+
+        await authService.register(registerData("attente@example.com"), "10.0.0.1");
+
+        expect(fakeUserRepository.deleteById).toHaveBeenCalledWith(77);
+        expect(fakeUserRepository.createClientUser).toHaveBeenCalledTimes(1);
+        expect(fakeEmailSender.sendVerificationCode).toHaveBeenCalledTimes(1);
     });
 });
