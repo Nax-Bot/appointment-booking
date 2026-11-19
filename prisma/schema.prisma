@@ -35,6 +35,8 @@ enum PaymentMethod {
 
 // Tout les types doit commencé par une majuscule
 // @db => /> type de donnée accepté par la base de données
+
+// TABLE UTILISATEUR
 model User {
   userId          Int       @id @default(autoincrement()) @map("user_id")
   lastName        String    @map("last_name") @db.VarChar(100)
@@ -54,7 +56,8 @@ model User {
   @@map("users")
 }
 
-// Le code de vérification en cours d'un utilisateur (au plus un à la fois)
+// TABLE DE VERIFICATION D'EMAIL : Le code de vérification en cours d'un utilisateur (au plus un à la fois)
+// ENREGISTRE LES OTP UNE A LA FOIS
 model EmailVerification {
   userId     Int      @id @map("user_id")
   codeHash   String   @map("code_hash") @db.VarChar(64)
@@ -67,6 +70,7 @@ model EmailVerification {
   @@map("email_verifications")
 }
 
+// TABLE D'UTILISATEUR CLIENT : HERITE DE USER
 model Client {
   userId    Int       @id @map("user_id")
   birthDate DateTime? @map("birth_date") @db.Date
@@ -78,6 +82,7 @@ model Client {
   @@map("clients")
 }
 
+// TABLE PROFESSIONNEL : HERITE DE USER
 model Professional {
   userId      Int     @id @map("user_id")
   description String? @db.Text
@@ -93,6 +98,7 @@ model Professional {
   @@map("professionals")
 }
 
+// TABLE POUR ENREGISTRER LES DIFFERENTES SERVICES
 model Service {
   id          Int     @id @default(autoincrement())
   name        String  @db.VarChar(150)
@@ -107,6 +113,7 @@ model Service {
 }
 
 // Association PROPOSER (n,n)
+// ENTRE PROFESSIONNEL - SERVICE
 model ProfessionalService {
   professionalId Int      @map("professional_id")
   serviceId      Int      @map("service_id")
@@ -121,6 +128,7 @@ model ProfessionalService {
   @@map("professional_services")
 }
 
+// TABLE D'ENREGISTREMENT DE RENDEZ-VOUS
 model Appointment {
   id                 Int               @id @default(autoincrement())
   startDatetime      DateTime          @map("start_datetime")
@@ -152,6 +160,7 @@ model Appointment {
   @@map("appointments")
 }
 
+// TABLE POUR LES TRANSACTION DE PAYMENT
 model Payment {
   id                Int           @id @default(autoincrement())
   amount            Decimal       @db.Decimal(10, 2)
@@ -168,6 +177,7 @@ model Payment {
   @@map("payments")
 }
 
+// TABLE POUR ENREGISTRER LES DISPONIBILITÉS DE CHAQUE PROFESSIONNEL
 model Availability {
   id        Int       @id @default(autoincrement())
   dayOfWeek Int       @map("day_of_week") // 0 = dimanche … 6 = samedi
@@ -183,6 +193,7 @@ model Availability {
   @@map("availabilities")
 }
 
+// TABLE POUR ENREGISTRER LES INDISPONIBILITÉS DE CHAQUE PROFESSIONNEL
 model Unavailability {
   id            Int      @id @default(autoincrement())
   startDatetime DateTime @map("start_datetime")
@@ -197,6 +208,7 @@ model Unavailability {
 }
 
 // Les compteurs de la limitation de tentatives (connexion, et plus tard d'autres routes)
+// C'EST LA TABLE QUI ENREGISTRE LES TENTATIVES DE CONNEXION ET INCREMENT LES COMPTEURS
 model RateLimit {
   limitKey     String    @id @map("limit_key") @db.VarChar(320)
   count        Int       @default(0)
