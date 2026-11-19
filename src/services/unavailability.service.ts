@@ -1,6 +1,8 @@
 import { UnavailabilityRepository, UnavailabilityData } from "@/repositories/unavailability.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
+import { AppointmentRepository } from "@/repositories/appointment.repository";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { toLocalMoment, minutesToText } from "@/lib/datetime";
 
 // Données reçues (dates ISO 8601 avec fuseau)
 export interface UnavailabilityInput {
@@ -28,13 +30,16 @@ interface UnavailabilityRow {
 export class UnavailabilityService {
     private unavailabilityRepository: UnavailabilityRepository;
     private professionalRepository: ProfessionalRepository;
+    private appointmentRepository: AppointmentRepository;
 
     constructor(
         unavailabilityRepository: UnavailabilityRepository,
-        professionalRepository: ProfessionalRepository
+        professionalRepository: ProfessionalRepository,
+        appointmentRepository: AppointmentRepository
     ) {
         this.unavailabilityRepository = unavailabilityRepository;
         this.professionalRepository = professionalRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // Liste les indisponibilités d'un professionnel
@@ -117,6 +122,21 @@ export class UnavailabilityService {
             if (isItself === false) {
                 throw new ConflictError("Cette période chevauche une autre indisponibilité");
             }
+        }
+
+        // Règle 3 : pas de rendez-vous actif (en attente ou confirmé) sur la période.
+        // Le professionnel doit d'abord annuler ou déplacer ces rendez-vous.
+        const booked = await this.appointmentRepository.findActiveOverlapping(professionalId, start, end);
+        if (booked.length > 0) {
+            const details: string[] = [];
+            for (const appointment of booked) {
+                const local = toLocalMoment(appointment.startDatetime);
+                details.push("rendez-vous #" + appointment.id + " : " + local.dateText + " à " + minutesToText(local.minutes));
+            }
+            throw new ConflictError(
+                "Cette période contient " + booked.length + " rendez-vous. Annulez-les ou déplacez-les d'abord.",
+                details
+            );
         }
 
         // Raison absente ou null = pas de raison

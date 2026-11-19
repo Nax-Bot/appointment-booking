@@ -76,8 +76,8 @@ const authService = new AuthService(
 const serviceService = new ServiceService(serviceRepository, professionalRepository);
 const professionalService = new ProfessionalService(professionalRepository, serviceRepository);
 const offerService = new OfferService(offerRepository, professionalRepository, serviceRepository);
-const availabilityService = new AvailabilityService(availabilityRepository, professionalRepository);
-const unavailabilityService = new UnavailabilityService(unavailabilityRepository, professionalRepository);
+const availabilityService = new AvailabilityService(availabilityRepository, professionalRepository, appointmentRepository);
+const unavailabilityService = new UnavailabilityService(unavailabilityRepository, professionalRepository, appointmentRepository);
 const appointmentService = new AppointmentService(
     appointmentRepository,
     professionalRepository,

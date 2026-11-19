@@ -1,6 +1,9 @@
 import { AvailabilityRepository, AvailabilityData } from "@/repositories/availability.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
+import { AppointmentRepository } from "@/repositories/appointment.repository";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { toLocalMoment, timeColumnToMinutes, dateColumnToText, minutesToText } from "@/lib/datetime";
+import { TimeBlock, mergeTimeBlocks, isCoveredByBlocks } from "@/lib/slot-grid";
 
 // Données reçues (heures en "HH:mm", dates en "AAAA-MM-JJ")
 export interface AvailabilityInput {
@@ -31,16 +34,26 @@ interface AvailabilityRow {
     validTo: Date | null;
 }
 
+// Un rendez-vous tel que le contrôle de protection en a besoin
+interface BookedAppointment {
+    id: number;
+    startDatetime: Date;
+    endDatetime: Date;
+}
+
 export class AvailabilityService {
     private availabilityRepository: AvailabilityRepository;
     private professionalRepository: ProfessionalRepository;
+    private appointmentRepository: AppointmentRepository;
 
     constructor(
         availabilityRepository: AvailabilityRepository,
-        professionalRepository: ProfessionalRepository
+        professionalRepository: ProfessionalRepository,
+        appointmentRepository: AppointmentRepository
     ) {
         this.availabilityRepository = availabilityRepository;
         this.professionalRepository = professionalRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // Liste les disponibilités d'un professionnel
@@ -74,6 +87,17 @@ export class AvailabilityService {
 
         // On ignore la disponibilité elle-même dans le contrôle des chevauchements
         const data = await this.prepareData(professionalId, input, availabilityId);
+
+        // Protection : la nouvelle plage ne doit laisser aucun rendez-vous à venir sans horaires
+        await this.checkNoAppointmentBroken(professionalId, availabilityId, {
+            id: availabilityId,
+            dayOfWeek: data.dayOfWeek,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            validFrom: data.validFrom,
+            validTo: data.validTo,
+        });
+
         const row = await this.availabilityRepository.update(availabilityId, data);
         return this.toItem(row);
     }
@@ -85,8 +109,84 @@ export class AvailabilityService {
             throw new NotFoundError("Disponibilité introuvable");
         }
 
+        // Protection : la suppression ne doit laisser aucun rendez-vous à venir sans horaires
+        await this.checkNoAppointmentBroken(professionalId, availabilityId, null);
+
         await this.availabilityRepository.delete(availabilityId);
         return { message: "Disponibilité supprimée" };
+    }
+
+    // Refuse la modification (replacement) ou la suppression (replacement = null) d'une plage
+    // si elle laisse HORS horaires un rendez-vous actif à venir qui était couvert jusque-là.
+    // Un rendez-vous déjà hors horaires avant la modification (ajouté à la main) ne bloque rien.
+    private async checkNoAppointmentBroken(
+        professionalId: number,
+        changedId: number,
+        replacement: AvailabilityRow | null
+    ) {
+        const appointments = await this.appointmentRepository.findActiveEndingAfter(professionalId, new Date());
+        if (appointments.length === 0) {
+            return;
+        }
+
+        const rowsBefore = await this.availabilityRepository.findByProfessional(professionalId);
+
+        const rowsAfter: AvailabilityRow[] = [];
+        for (const row of rowsBefore) {
+            if (row.id !== changedId) {
+                rowsAfter.push(row);
+            }
+        }
+        if (replacement !== null) {
+            rowsAfter.push(replacement);
+        }
+
+        const broken: string[] = [];
+        for (const appointment of appointments) {
+            const wasCovered = this.isCovered(rowsBefore, appointment);
+            const isStillCovered = this.isCovered(rowsAfter, appointment);
+
+            if (wasCovered && isStillCovered === false) {
+                const local = toLocalMoment(appointment.startDatetime);
+                broken.push("rendez-vous #" + appointment.id + " : " + local.dateText + " à " + minutesToText(local.minutes));
+            }
+        }
+
+        if (broken.length > 0) {
+            throw new ConflictError(
+                "Cette modification laisserait " +
+                    broken.length +
+                    " rendez-vous à venir en dehors de vos horaires. Annulez-les ou déplacez-les d'abord.",
+                broken
+            );
+        }
+    }
+
+    // Vrai si ces plages (heure locale, validité comprise) couvrent tout le rendez-vous
+    private isCovered(rows: AvailabilityRow[], appointment: BookedAppointment): boolean {
+        const startLocal = toLocalMoment(appointment.startDatetime);
+        const endLocal = toLocalMoment(appointment.endDatetime);
+
+        // Un rendez-vous qui passe minuit ne tient dans aucune plage
+        if (endLocal.dateText !== startLocal.dateText) {
+            return false;
+        }
+
+        const blocks: TimeBlock[] = [];
+        for (const row of rows) {
+            if (row.dayOfWeek !== startLocal.dayOfWeek) {
+                continue;
+            }
+            if (row.validFrom !== null && dateColumnToText(row.validFrom) > startLocal.dateText) {
+                continue;
+            }
+            if (row.validTo !== null && dateColumnToText(row.validTo) < startLocal.dateText) {
+                continue;
+            }
+            blocks.push({ start: timeColumnToMinutes(row.startTime), end: timeColumnToMinutes(row.endTime) });
+        }
+
+        return isCoveredByBlocks(mergeTimeBlocks(blocks), startLocal.minutes, endLocal.minutes);
     }
 
     // Le compte professionnel peut avoir été supprimé alors que la session existe encore
