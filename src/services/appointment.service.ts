@@ -8,6 +8,7 @@ import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/date
 import { Role } from "@/lib/auth";
 import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/slot-grid";
 import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/payment-rules";
+import type { AppointmentNotifier } from "@/services/appointment-notifier.service";
 import type { TransactionRunner, DbClient } from "@/lib/transaction-runner";
 
 // Données reçues pour réserver
@@ -98,6 +99,8 @@ interface AppointmentDetailRow {
 type ScheduleCheck = "OK" | "OUTSIDE_HOURS" | "OFF_GRID";
 
 export class AppointmentService {
+    // Facultatif : sans lui, aucun email n'est envoyé (c'est le cas dans les tests)
+    private notifier: AppointmentNotifier | null;
     private appointmentRepository: AppointmentRepository;
     private professionalRepository: ProfessionalRepository;
     private offerRepository: OfferRepository;
@@ -111,8 +114,10 @@ export class AppointmentService {
         offerRepository: OfferRepository,
         availabilityRepository: AvailabilityRepository,
         unavailabilityRepository: UnavailabilityRepository,
-        transactionRunner: TransactionRunner
+        transactionRunner: TransactionRunner,
+        notifier?: AppointmentNotifier
     ) {
+        this.notifier = notifier ?? null;
         this.appointmentRepository = appointmentRepository;
         this.professionalRepository = professionalRepository;
         this.offerRepository = offerRepository;
@@ -361,6 +366,12 @@ export class AppointmentService {
         }
 
         const updated = await this.appointmentRepository.cancel(appointmentId, new Date(), cleanReason);
+
+        // On prévient l'autre personne par email (une panne d'email ne fait pas échouer l'annulation)
+        if (this.notifier !== null) {
+            await this.notifier.notifyCancelled(appointmentId, role === "CLIENT" ? "CLIENT" : "PROFESSIONAL");
+        }
+
         return this.toDetail(updated);
     }
 

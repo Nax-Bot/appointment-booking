@@ -145,3 +145,34 @@ describe("setupAccount", () => {
         expect(JSON.stringify(r)).not.toContain("KEY1234567890");
     });
 });
+
+
+describe("emails après paiement", () => {
+    function withNotifier() {
+        const notifier = { notifyConfirmed: jest.fn().mockResolvedValue(undefined) };
+        const runner: any = { run: (work: any) => work(db) };
+        const svc = new PaymentService(accounts as any, payments as any, appointments as any, runner, gateway, { publicBaseUrl: "https://pub.example" }, notifier as any);
+        return { svc, notifier };
+    }
+
+    it("envoie la confirmation quand le rendez-vous vient d'être confirmé", async () => {
+        const { svc, notifier } = withNotifier();
+        const s = signed(okBody);
+        await svc.handleNotification(2, s.raw, s.header);
+        expect(notifier.notifyConfirmed).toHaveBeenCalledWith(10);
+    });
+    it("n'envoie rien si la notification est rejouée", async () => {
+        const { svc, notifier } = withNotifier();
+        payments.markPaidIfPending.mockResolvedValue(0);
+        const s = signed(okBody);
+        await svc.handleNotification(2, s.raw, s.header);
+        expect(notifier.notifyConfirmed).not.toHaveBeenCalled();
+    });
+    it("n'envoie rien si le rendez-vous n'était plus en attente", async () => {
+        const { svc, notifier } = withNotifier();
+        appointments.confirmIfPending.mockResolvedValue(0);
+        const s = signed(okBody);
+        await svc.handleNotification(2, s.raw, s.header);
+        expect(notifier.notifyConfirmed).not.toHaveBeenCalled();
+    });
+});

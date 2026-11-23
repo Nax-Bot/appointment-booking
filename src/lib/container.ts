@@ -29,6 +29,7 @@ import { ProfessionalService } from "@/services/professional.service";
 import { OfferService } from "@/services/offer.service";
 import { AvailabilityService } from "@/services/availability.service";
 import { UnavailabilityService } from "@/services/unavailability.service";
+import { AppointmentNotifier } from "@/services/appointment-notifier.service";
 import { AppointmentService } from "@/services/appointment.service";
 import { SlotService } from "@/services/slot.service";
 import { AuthController } from "@/controllers/auth.controller";
@@ -88,13 +89,15 @@ const professionalService = new ProfessionalService(professionalRepository, serv
 const offerService = new OfferService(offerRepository, professionalRepository, serviceRepository);
 const availabilityService = new AvailabilityService(availabilityRepository, professionalRepository, appointmentRepository);
 const unavailabilityService = new UnavailabilityService(unavailabilityRepository, professionalRepository, appointmentRepository);
+const appointmentNotifier = new AppointmentNotifier(appointmentRepository, emailSender);
 const appointmentService = new AppointmentService(
     appointmentRepository,
     professionalRepository,
     offerRepository,
     availabilityRepository,
     unavailabilityRepository,
-    transactionRunner
+    transactionRunner,
+    appointmentNotifier
 );
 const slotService = new SlotService(
     professionalRepository,
@@ -120,7 +123,8 @@ const paymentService = new PaymentService(
         publicBaseUrl: (process.env.APP_PUBLIC_URL ?? "").replace(/\/+$/, ""),
         successUrl: process.env.PAYMENT_SUCCESS_URL || undefined,
         failureUrl: process.env.PAYMENT_FAILURE_URL || undefined,
-    }
+    },
+    appointmentNotifier
 );
 
 // Controllers (les seuls objets exportés)

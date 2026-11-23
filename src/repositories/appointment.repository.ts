@@ -203,6 +203,27 @@ export class AppointmentRepository {
     return result.count;
   }
 
+  // Ce qu'il faut pour écrire un email : le rendez-vous avec les noms ET les adresses du client et du professionnel
+  async findForNotification(id: number, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    return client.appointment.findUnique({
+      where: { id: id },
+      select: {
+        id: true,
+        startDatetime: true,
+        cancellationReason: true,
+        guestName: true,
+        service: { select: { name: true } },
+        client: { select: { user: { select: { firstName: true, lastName: true, email: true } } } },
+        professional: { select: { user: { select: { firstName: true, lastName: true, email: true } } } },
+      },
+    });
+  }
+
   // Annule les rendez-vous réservés mais jamais payés dans le délai.
   // Un rendez-vous PENDING est libéré si TOUTES ces conditions sont vraies :
   // - il a été créé avant "createdBefore" (le délai de grâce est passé)

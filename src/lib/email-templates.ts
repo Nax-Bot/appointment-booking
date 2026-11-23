@@ -81,3 +81,107 @@ export function buildAccountExistsEmail(): EmailContent {
 
     return { subject: subject, text: text, html: html };
 }
+
+// Les informations d'un rendez-vous utiles pour un email
+export interface AppointmentEmailInfo {
+    appointmentId: number;
+    serviceName: string;
+    startDatetime: Date;
+    professionalName: string;
+    clientName: string;
+    reason?: string | null;
+}
+
+// Les noms viennent des utilisateurs : on neutralise les caractères spéciaux avant de les mettre dans le HTML
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+// La date en heure locale de Madagascar, par exemple "lundi 23 novembre 2026 à 14:00"
+export function formatLocalDateTime(date: Date): string {
+    const day = new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Indian/Antananarivo",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    }).format(date);
+    const time = new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Indian/Antananarivo",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    }).format(date);
+    return day + " à " + time;
+}
+
+function wrapHtml(title: string, lines: string[]): string {
+    return (
+        '<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1f2937;">' +
+        '<h2 style="margin: 0 0 16px 0;">' + escapeHtml(title) + "</h2>" +
+        lines.map((line) => "<p>" + escapeHtml(line) + "</p>").join("") +
+        '<p style="color: #6b7280; font-size: 14px;">' + APP_NAME + "</p>" +
+        "</div>"
+    );
+}
+
+// Email "rendez-vous confirmé" (paiement reçu). audience : à qui on écrit.
+export function buildAppointmentConfirmedEmail(info: AppointmentEmailInfo, audience: "CLIENT" | "PROFESSIONAL"): EmailContent {
+    const when = formatLocalDateTime(info.startDatetime);
+    const subject = "Rendez-vous confirmé le " + when + " - " + APP_NAME;
+
+    const lines =
+        audience === "CLIENT"
+            ? [
+                  "Bonjour " + info.clientName + ",",
+                  "Votre paiement a bien été reçu : votre rendez-vous est confirmé.",
+                  "Service : " + info.serviceName,
+                  "Avec : " + info.professionalName,
+                  "Quand : " + when,
+              ]
+            : [
+                  "Bonjour " + info.professionalName + ",",
+                  "Un rendez-vous vient d'être confirmé et payé.",
+                  "Service : " + info.serviceName,
+                  "Client : " + info.clientName,
+                  "Quand : " + when,
+              ];
+
+    return { subject: subject, text: [...lines, "", APP_NAME].join("\n"), html: wrapHtml("Rendez-vous confirmé", lines) };
+}
+
+// Email "rendez-vous annulé". cancelledBy : qui a annulé ; audience : à qui on écrit.
+export function buildAppointmentCancelledEmail(
+    info: AppointmentEmailInfo,
+    audience: "CLIENT" | "PROFESSIONAL",
+    cancelledBy: "CLIENT" | "PROFESSIONAL" | "SYSTEM"
+): EmailContent {
+    const when = formatLocalDateTime(info.startDatetime);
+    const subject = "Rendez-vous annulé du " + when + " - " + APP_NAME;
+
+    let who = "Le rendez-vous a été annulé automatiquement (paiement non effectué dans le délai).";
+    if (cancelledBy === "CLIENT") {
+        who = "Le client a annulé ce rendez-vous.";
+    } else if (cancelledBy === "PROFESSIONAL") {
+        who = "Le professionnel a annulé ce rendez-vous.";
+    }
+
+    const greeting = audience === "CLIENT" ? "Bonjour " + info.clientName + "," : "Bonjour " + info.professionalName + ",";
+    const lines = [
+        greeting,
+        who,
+        "Service : " + info.serviceName,
+        audience === "CLIENT" ? "Avec : " + info.professionalName : "Client : " + info.clientName,
+        "Prévu le : " + when,
+    ];
+    if (info.reason) {
+        lines.push("Raison : " + info.reason);
+    }
+
+    return { subject: subject, text: [...lines, "", APP_NAME].join("\n"), html: wrapHtml("Rendez-vous annulé", lines) };
+}

@@ -2,6 +2,7 @@ import type { PaymentAccountRepository } from "@/repositories/payment-account.re
 import type { PaymentRepository } from "@/repositories/payment.repository";
 import type { AppointmentRepository } from "@/repositories/appointment.repository";
 import type { TransactionRunner } from "@/lib/transaction-runner";
+import type { AppointmentNotifier } from "@/services/appointment-notifier.service";
 import type { PaymentGateway } from "@/lib/payments/payment-gateway";
 import { verifyPapiSignature } from "@/lib/payments/papi-signature";
 import { encryptSecret, decryptSecret } from "@/lib/secret-box";
@@ -41,7 +42,8 @@ export class PaymentService {
         private appointmentRepository: AppointmentRepository,
         private transactionRunner: TransactionRunner,
         private gateway: PaymentGateway,
-        private settings: PaymentSettings
+        private settings: PaymentSettings,
+        private notifier?: AppointmentNotifier
     ) {}
 
     // Un professionnel enregistre (ou remplace) sa boutique Papi.
@@ -184,7 +186,9 @@ export class PaymentService {
     // Paiement réussi : le paiement passe à PAID et le rendez-vous à CONFIRMED, ensemble ou pas du tout.
     // Une notification rejouée ne fait rien (le paiement n'est plus PENDING).
     private async confirm(paymentId: number, appointmentId: number, body: any): Promise<NotificationResult> {
-        return this.transactionRunner.run(async (db) => {
+        let appointmentConfirmed = false;
+
+        const result = await this.transactionRunner.run(async (db) => {
             const changed = await this.paymentRepository.markPaidIfPending(
                 paymentId,
                 {
@@ -203,9 +207,17 @@ export class PaymentService {
             if (confirmed === 0) {
                 // Payé mais le rendez-vous n'est plus en attente (annulé entre-temps) : à rembourser.
                 console.error("[papi] PAIEMENT REÇU POUR UN RENDEZ-VOUS NON EN ATTENTE, remboursement à faire", paymentId, appointmentId);
+            } else {
+                appointmentConfirmed = true;
             }
             return "PAID" as NotificationResult;
         });
+
+        // Les emails partent APRÈS la transaction, et seulement si le rendez-vous vient d'être confirmé
+        if (appointmentConfirmed && this.notifier) {
+            await this.notifier.notifyConfirmed(appointmentId);
+        }
+        return result;
     }
 }
 
