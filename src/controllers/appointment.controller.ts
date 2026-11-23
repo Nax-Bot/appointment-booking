@@ -1,4 +1,6 @@
 import { BaseController } from "@/controllers/base.controller";
+import { timingSafeEqual } from "crypto";
+import { NotFoundError, UnauthorizedError } from "@/lib/errors";
 import { AppointmentService } from "@/services/appointment.service";
 import {
     createAppointmentSchema,
@@ -73,6 +75,28 @@ export class AppointmentController extends BaseController {
             const data = await this.readAndValidateOptionalBody(req, cancelAppointmentSchema);
             const appointment = await this.appointmentService.cancel(session.userId, session.role, id, data.reason);
             return this.ok(appointment);
+        } catch (error) {
+            return this.handleError(error);
+        }
+    }
+
+    // POST /api/internal/release-expired : libère les réservations non payées dont le délai est passé.
+    // Appelée par une tâche planifiée (cron) avec l'en-tête x-cron-secret = CRON_SECRET du .env.
+    // Sans CRON_SECRET dans le .env, la route n'existe pas (404).
+    async releaseExpired(req: Request) {
+        try {
+            const expected = process.env.CRON_SECRET ?? "";
+            if (expected.length < 16) {
+                throw new NotFoundError("Introuvable");
+            }
+            const received = req.headers.get("x-cron-secret") ?? "";
+            const a = Buffer.from(received);
+            const b = Buffer.from(expected);
+            if (a.length !== b.length || timingSafeEqual(a, b) === false) {
+                throw new UnauthorizedError("Secret invalide");
+            }
+            const released = await this.appointmentService.releaseExpiredUnpaid();
+            return this.ok({ released: released });
         } catch (error) {
             return this.handleError(error);
         }

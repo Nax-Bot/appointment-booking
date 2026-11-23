@@ -5,12 +5,11 @@ import type { TransactionRunner } from "@/lib/transaction-runner";
 import type { PaymentGateway } from "@/lib/payments/payment-gateway";
 import { verifyPapiSignature } from "@/lib/payments/papi-signature";
 import { encryptSecret, decryptSecret } from "@/lib/secret-box";
+import { PAYMENT_LINK_HOURS } from "@/lib/payment-rules";
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
 
 // Montant minimum accepté par Papi (en MGA)
 export const MIN_ONLINE_AMOUNT = 300;
-// Durée de validité du lien de paiement (en heures) : passé ce délai, le rendez-vous non payé pourra être libéré
-export const PAYMENT_LINK_HOURS = 1;
 
 export interface PaymentSettings {
     // Adresse publique de l'application (celle que Papi peut appeler), sans "/" final

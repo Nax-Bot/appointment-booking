@@ -106,6 +106,7 @@ beforeEach(() => {
     };
     fakeAppointmentRepository = {
         findOverlapping: jest.fn().mockResolvedValue([]),
+        cancelExpiredUnpaid: jest.fn().mockResolvedValue(0),
     };
 
     slotService = new SlotService(

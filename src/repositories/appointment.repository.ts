@@ -183,6 +183,46 @@ export class AppointmentRepository {
     });
   }
 
+  // Annule les rendez-vous réservés mais jamais payés dans le délai.
+  // Un rendez-vous PENDING est libéré si TOUTES ces conditions sont vraies :
+  // - il a été créé avant "createdBefore" (le délai de grâce est passé)
+  // - il n'a aucun paiement PAID
+  // - il n'a aucun lien de paiement encore valide (PENDING dont l'échéance n'est pas passée)
+  // professionalId facultatif : sans lui, on traite tous les professionnels.
+  // Renvoie le nombre de rendez-vous libérés.
+  async cancelExpiredUnpaid(
+    now: Date,
+    createdBefore: Date,
+    reason: string,
+    professionalId?: number,
+    db?: Prisma.TransactionClient
+  ) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    const result = await client.appointment.updateMany({
+      where: {
+        status: "PENDING",
+        // Un rendez-vous ajouté à la main n'a pas de client et est déjà CONFIRMED : on ne touche qu'aux réservations en ligne
+        clientId: { not: null },
+        createdAt: { lt: createdBefore },
+        ...(professionalId !== undefined ? { professionalId: professionalId } : {}),
+        payments: {
+          none: {
+            OR: [
+              { paymentStatus: "PAID" },
+              { paymentStatus: "PENDING", expiresAt: { gt: now } },
+            ],
+          },
+        },
+      },
+      data: { status: "CANCELLED", cancelledAt: now, cancellationReason: reason },
+    });
+    return result.count;
+  }
+
   // Passe un rendez-vous de PENDING à CONFIRMED (après un paiement réussi).
   // Renvoie le nombre de lignes modifiées : 0 = il n'était plus en attente (annulé, déjà confirmé...).
   async confirmIfPending(id: number, db?: Prisma.TransactionClient) {

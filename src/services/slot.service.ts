@@ -1,3 +1,4 @@
+import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/payment-rules";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
@@ -105,6 +106,13 @@ export class SlotService {
         // Les périodes déjà occupées ce jour-là (absences et rendez-vous non annulés)
         const dayStart = localMidnightToUtc(dateText);
         const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+        // Les réservations non payées dont le délai est passé ne bloquent plus leur créneau
+        await this.appointmentRepository.cancelExpiredUnpaid(
+            new Date(),
+            new Date(Date.now() - UNPAID_HOLD_MINUTES * 60 * 1000),
+            UNPAID_CANCEL_REASON,
+            professionalId
+        );
         const busyPeriods = await this.getBusyPeriods(professionalId, dayStart, dayEnd);
 
         const now = Date.now();

@@ -23,6 +23,11 @@ export async function proxy(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // Tâches planifiées : protégées par un secret (x-cron-secret), vérifié dans la route
+    if (path.startsWith("/api/internal/")) {
+        return NextResponse.next();
+    }
+
     // Les notifications de paiement viennent des serveurs de Papi (pas d'un utilisateur connecté).
     // Elles sont protégées par la vérification de signature, faite dans la route elle-même.
     if (path.startsWith("/api/payments/papi/")) {

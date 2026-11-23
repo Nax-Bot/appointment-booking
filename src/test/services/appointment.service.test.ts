@@ -116,6 +116,7 @@ beforeEach(() => {
     };
     fakeAppointmentRepository = {
         findOverlapping: jest.fn().mockResolvedValue([]),
+        cancelExpiredUnpaid: jest.fn().mockResolvedValue(0),
         // Le faux "enregistre" : il renvoie ce qu'il a reçu, avec un identifiant et un statut
         create: jest.fn().mockImplementation(async (data: object) => ({
             id: 10,
@@ -453,5 +454,28 @@ describe("AppointmentService.createManual : protection contre la double réserva
 
         await expect(appointmentService.createManual(5, manualInput)).rejects.toThrow(ConflictError);
         expect(fakeAppointmentRepository.createManual).not.toHaveBeenCalled();
+    });
+});
+
+describe("libération des réservations non payées", () => {
+    it("create libère d'abord les réservations expirées du professionnel, dans la même transaction", async () => {
+        await appointmentService.create(CLIENT_ID, bookingInput("2026-11-09T09:00:00+03:00"));
+        const call = fakeAppointmentRepository.cancelExpiredUnpaid.mock.calls[0];
+        expect(call[3]).toBe(5); // professionnel
+        expect(call[4]).toBe(fakeTransaction); // même transaction que la réservation
+        // et cela se passe AVANT la recherche de chevauchement
+        const order = (m: jest.Mock) => m.mock.invocationCallOrder[0];
+        expect(order(fakeAppointmentRepository.cancelExpiredUnpaid)).toBeLessThan(order(fakeAppointmentRepository.findOverlapping));
+    });
+
+    it("le délai de grâce est de 60 minutes", async () => {
+        await appointmentService.releaseExpiredUnpaid();
+        const [now, createdBefore] = fakeAppointmentRepository.cancelExpiredUnpaid.mock.calls[0];
+        expect(now.getTime() - createdBefore.getTime()).toBe(60 * 60 * 1000);
+    });
+
+    it("renvoie le nombre de rendez-vous libérés", async () => {
+        fakeAppointmentRepository.cancelExpiredUnpaid.mockResolvedValue(3);
+        expect(await appointmentService.releaseExpiredUnpaid()).toBe(3);
     });
 });

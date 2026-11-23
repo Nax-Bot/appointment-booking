@@ -7,7 +7,8 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/datetime";
 import { Role } from "@/lib/auth";
 import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/slot-grid";
-import type { TransactionRunner } from "@/lib/transaction-runner";
+import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/payment-rules";
+import type { TransactionRunner, DbClient } from "@/lib/transaction-runner";
 
 // Données reçues pour réserver
 export interface CreateAppointmentInput {
@@ -194,6 +195,9 @@ export class AppointmentService {
                 throw new NotFoundError("Professionnel introuvable");
             }
 
+            // On libère d'abord les réservations non payées dont le délai est passé : leur créneau redevient libre
+            await this.releaseExpiredUnpaid(input.professionalId, db);
+
             const others = await this.appointmentRepository.findOverlapping(input.professionalId, start, end, db);
             if (others.length > 0) {
                 throw new ConflictError("Ce créneau est déjà réservé");
@@ -213,6 +217,14 @@ export class AppointmentService {
             );
         });
         return this.toItem(row);
+    }
+
+    // Libère les réservations non payées dont le délai est passé (pour un professionnel, ou pour tous).
+    // Renvoie le nombre de rendez-vous libérés.
+    async releaseExpiredUnpaid(professionalId?: number, db?: DbClient): Promise<number> {
+        const now = new Date();
+        const createdBefore = new Date(now.getTime() - UNPAID_HOLD_MINUTES * 60 * 1000);
+        return this.appointmentRepository.cancelExpiredUnpaid(now, createdBefore, UNPAID_CANCEL_REASON, professionalId, db);
     }
 
     // Un professionnel ajoute un rendez-vous à la main pour un client sans compte (un invité).
