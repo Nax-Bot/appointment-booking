@@ -10,7 +10,14 @@ import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
+import { PaymentAccountRepository } from "@/repositories/payment-account.repository";
+import { PaymentRepository } from "@/repositories/payment.repository";
 import { PrismaTransactionRunner } from "@/lib/transaction-runner";
+import { PapiGateway } from "@/lib/payments/papi-gateway";
+import { FakePaymentGateway } from "@/lib/payments/fake-gateway";
+import { PaymentGateway } from "@/lib/payments/payment-gateway";
+import { PaymentService } from "@/services/payment.service";
+import { PaymentController } from "@/controllers/payment.controller";
 
 import { ConsoleEmailSender, EmailSender } from "@/lib/email-sender";
 import { SmtpEmailSender } from "@/lib/smtp-email-sender";
@@ -61,6 +68,9 @@ const availabilityRepository = new AvailabilityRepository();
 const unavailabilityRepository = new UnavailabilityRepository();
 const appointmentRepository = new AppointmentRepository();
 
+const paymentAccountRepository = new PaymentAccountRepository();
+const paymentRepository = new PaymentRepository();
+
 // Le moteur de transactions
 const transactionRunner = new PrismaTransactionRunner();
 
@@ -94,6 +104,25 @@ const slotService = new SlotService(
     appointmentRepository
 );
 
+// Paiement en ligne : PAYMENT_GATEWAY=fake dans .env utilise une fausse passerelle (sans Papi)
+let paymentGateway: PaymentGateway = new PapiGateway();
+if (process.env.PAYMENT_GATEWAY === "fake" && process.env.NODE_ENV !== "production") {
+    paymentGateway = new FakePaymentGateway();
+}
+const paymentService = new PaymentService(
+    paymentAccountRepository,
+    paymentRepository,
+    appointmentRepository,
+    transactionRunner,
+    paymentGateway,
+    {
+        // APP_PUBLIC_URL : l'adresse publique de l'application (en test : celle du tunnel)
+        publicBaseUrl: (process.env.APP_PUBLIC_URL ?? "").replace(/\/+$/, ""),
+        successUrl: process.env.PAYMENT_SUCCESS_URL || undefined,
+        failureUrl: process.env.PAYMENT_FAILURE_URL || undefined,
+    }
+);
+
 // Controllers (les seuls objets exportés)
 export const authController = new AuthController(authService);
 export const serviceController = new ServiceController(serviceService);
@@ -103,3 +132,4 @@ export const availabilityController = new AvailabilityController(availabilitySer
 export const unavailabilityController = new UnavailabilityController(unavailabilityService);
 export const appointmentController = new AppointmentController(appointmentService);
 export const slotController = new SlotController(slotService);
+export const paymentController = new PaymentController(paymentService);
