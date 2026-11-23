@@ -183,6 +183,21 @@ export class AppointmentRepository {
     });
   }
 
+  // Passe un rendez-vous de PENDING à CONFIRMED (après un paiement réussi).
+  // Renvoie le nombre de lignes modifiées : 0 = il n'était plus en attente (annulé, déjà confirmé...).
+  async confirmIfPending(id: number, db?: Prisma.TransactionClient) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    const result = await client.appointment.updateMany({
+      where: { id: id, status: "PENDING" },
+      data: { status: "CONFIRMED" },
+    });
+    return result.count;
+  }
+
   // Passe un rendez-vous au statut CANCELLED, avec la date et la raison de l'annulation
   async cancel(id: number, cancelledAt: Date, reason: string | null, db?: Prisma.TransactionClient) {
     let client: Prisma.TransactionClient = prisma;
