@@ -94,6 +94,7 @@ model Professional {
   appointments     Appointment[]
   availabilities   Availability[]
   unavailabilities Unavailability[]
+  paymentAccounts  PaymentAccount[]
 
   @@map("professionals")
 }
@@ -162,19 +163,50 @@ model Appointment {
 
 // TABLE POUR LES TRANSACTION DE PAYMENT
 model Payment {
-  id                Int           @id @default(autoincrement())
-  amount            Decimal       @db.Decimal(10, 2)
-  currency          String        @default("MGA") @db.VarChar(3)
-  paymentMethod     PaymentMethod @map("payment_method")
-  paymentStatus     PaymentStatus @default(PENDING) @map("payment_status")
-  paymentDate       DateTime?     @map("payment_date")
-  externalReference String?       @map("external_reference") @db.VarChar(100)
+  id                Int            @id @default(autoincrement())
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String         @default("MGA") @db.VarChar(3)
+  // Facultatif : avec Papi, on ne connaît le mode (MVola, Airtel...) qu'après le paiement
+  paymentMethod     PaymentMethod? @map("payment_method")
+  paymentStatus     PaymentStatus  @default(PENDING) @map("payment_status")
+  paymentDate       DateTime?      @map("payment_date")
+  externalReference String?        @map("external_reference") @db.VarChar(100) // référence Papi (UUID)
+
+  // Paiement en ligne
+  provider          String?        @db.VarChar(20) // "PAPI" ou "CASH"
+  reference         String?        @unique @db.VarChar(100) // notre identifiant envoyé à Papi
+  notificationToken String?        @map("notification_token") @db.VarChar(255)
+  paymentUrl        String?        @map("payment_url") @db.VarChar(500)
+  expiresAt         DateTime?      @map("expires_at")
+  feeAmount         Decimal?       @map("fee_amount") @db.Decimal(10, 2) // frais retenus par Papi
 
   appointmentId Int         @map("appointment_id")
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
 
+  paymentAccountId Int?            @map("payment_account_id")
+  paymentAccount   PaymentAccount? @relation(fields: [paymentAccountId], references: [id], onDelete: Restrict)
+
   @@index([appointmentId])
+  @@index([paymentAccountId])
   @@map("payments")
+}
+
+// TABLE POUR LA BOUTIQUE PAPI D'UN PROFESSIONNEL (clé API + secret de signature, stockés CHIFFRÉS)
+model PaymentAccount {
+  id               Int       @id @default(autoincrement())
+  boutiqueCode     String    @map("boutique_code") @db.VarChar(50)
+  apiKeyEnc        String    @map("api_key_enc") @db.Text
+  webhookSecretEnc String    @map("webhook_secret_enc") @db.Text
+  status           String    @default("ACTIVE") @db.VarChar(10) // ACTIVE ou RETIRED
+  createdAt        DateTime  @default(now()) @map("created_at")
+  retiredAt        DateTime? @map("retired_at")
+
+  professionalId Int          @map("professional_id")
+  professional   Professional @relation(fields: [professionalId], references: [userId], onDelete: Restrict)
+  payments       Payment[]
+
+  @@index([professionalId, status])
+  @@map("payment_accounts")
 }
 
 // TABLE POUR ENREGISTRER LES DISPONIBILITÉS DE CHAQUE PROFESSIONNEL
