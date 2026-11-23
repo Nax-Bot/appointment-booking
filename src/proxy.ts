@@ -23,6 +23,12 @@ export async function proxy(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // Les notifications de paiement viennent des serveurs de Papi (pas d'un utilisateur connecté).
+    // Elles sont protégées par la vérification de signature, faite dans la route elle-même.
+    if (path.startsWith("/api/payments/papi/")) {
+        return NextResponse.next();
+    }
+
     // Toutes les autres routes /api exigent une session valide
     const cookie = req.cookies.get(SESSION_COOKIE_NAME);
     if (!cookie) {
