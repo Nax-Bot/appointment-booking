@@ -79,3 +79,10 @@ export const cancelAppointmentSchema = z.object({
     .nullable()
     .optional(),
 });
+
+// Données pour clôturer un rendez-vous : terminé, ou client absent
+export const appointmentOutcomeSchema = z.object({
+  status: z.enum(["COMPLETED", "NO_SHOW"], {
+    message: "Le statut doit être COMPLETED ou NO_SHOW",
+  }),
+});

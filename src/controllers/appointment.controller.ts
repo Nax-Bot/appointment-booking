@@ -7,6 +7,7 @@ import {
     createManualAppointmentSchema,
     listAppointmentsQuerySchema,
     cancelAppointmentSchema,
+    appointmentOutcomeSchema,
 } from "@/validations/appointment.validation";
 
 export class AppointmentController extends BaseController {
@@ -74,6 +75,19 @@ export class AppointmentController extends BaseController {
             // CHANGEMENT : on accepte un corps vide
             const data = await this.readAndValidateOptionalBody(req, cancelAppointmentSchema);
             const appointment = await this.appointmentService.cancel(session.userId, session.role, id, data.reason);
+            return this.ok(appointment);
+        } catch (error) {
+            return this.handleError(error);
+        }
+    }
+
+    // POST /api/appointments/[id]/outcome : le professionnel marque un rendez-vous terminé ou client absent
+    async markOutcome(req: Request, idText: string) {
+        try {
+            const session = await this.requireSession("PROFESSIONAL");
+            const id = this.parseId(idText);
+            const data = await this.readAndValidateBody(req, appointmentOutcomeSchema);
+            const appointment = await this.appointmentService.markOutcome(session.userId, id, data.status);
             return this.ok(appointment);
         } catch (error) {
             return this.handleError(error);

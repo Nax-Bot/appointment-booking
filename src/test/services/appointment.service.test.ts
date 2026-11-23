@@ -479,3 +479,68 @@ describe("libération des réservations non payées", () => {
         expect(await appointmentService.releaseExpiredUnpaid()).toBe(3);
     });
 });
+
+describe("AppointmentService.markOutcome : terminé / client absent", () => {
+    const PRO_ID = 5;
+
+    function row(over: Record<string, unknown> = {}) {
+        return {
+            id: 10,
+            startDatetime: new Date(NOW - 60 * 60 * 1000), // commencé il y a 1 h
+            endDatetime: new Date(NOW - 30 * 60 * 1000),
+            status: "CONFIRMED",
+            notes: null,
+            location: null,
+            priceAtBooking: 30000,
+            cancelledAt: null,
+            cancellationReason: null,
+            guestName: null,
+            guestPhone: null,
+            clientId: CLIENT_ID,
+            professionalId: PRO_ID,
+            service: { id: 3, name: "Coupe" },
+            client: { user: { firstName: "Marie", lastName: "Rakoto", phoneNumber: null } },
+            professional: { specialty: null, user: { firstName: "Jean", lastName: "Dupont" } },
+            ...over,
+        };
+    }
+
+    beforeEach(() => {
+        fakeAppointmentRepository.findById.mockResolvedValue(row());
+        fakeAppointmentRepository.setStatusIfCurrent = jest.fn().mockResolvedValue(1);
+    });
+
+    it("marque un rendez-vous confirmé et commencé comme terminé", async () => {
+        const result = await appointmentService.markOutcome(PRO_ID, 10, "COMPLETED");
+        expect(fakeAppointmentRepository.setStatusIfCurrent).toHaveBeenCalledWith(10, "CONFIRMED", "COMPLETED");
+        expect(result.id).toBe(10);
+    });
+    it("accepte NO_SHOW", async () => {
+        await appointmentService.markOutcome(PRO_ID, 10, "NO_SHOW");
+        expect(fakeAppointmentRepository.setStatusIfCurrent).toHaveBeenCalledWith(10, "CONFIRMED", "NO_SHOW");
+    });
+    it("refuse le rendez-vous d'un autre professionnel", async () => {
+        await expect(appointmentService.markOutcome(99, 10, "COMPLETED")).rejects.toBeInstanceOf(NotFoundError);
+    });
+    it("refuse un rendez-vous inexistant", async () => {
+        fakeAppointmentRepository.findById.mockResolvedValue(null);
+        await expect(appointmentService.markOutcome(PRO_ID, 10, "COMPLETED")).rejects.toBeInstanceOf(NotFoundError);
+    });
+    it("refuse un rendez-vous non payé (PENDING)", async () => {
+        fakeAppointmentRepository.findById.mockResolvedValue(row({ status: "PENDING" }));
+        await expect(appointmentService.markOutcome(PRO_ID, 10, "COMPLETED")).rejects.toBeInstanceOf(ConflictError);
+    });
+    it.each(["CANCELLED", "COMPLETED", "NO_SHOW"])("refuse un rendez-vous déjà %s", async (status) => {
+        fakeAppointmentRepository.findById.mockResolvedValue(row({ status }));
+        await expect(appointmentService.markOutcome(PRO_ID, 10, "COMPLETED")).rejects.toBeInstanceOf(ConflictError);
+    });
+    it("refuse un rendez-vous qui n'a pas encore commencé", async () => {
+        fakeAppointmentRepository.findById.mockResolvedValue(row({ startDatetime: new Date(NOW + 60 * 60 * 1000) }));
+        await expect(appointmentService.markOutcome(PRO_ID, 10, "COMPLETED")).rejects.toBeInstanceOf(ConflictError);
+        expect(fakeAppointmentRepository.setStatusIfCurrent).not.toHaveBeenCalled();
+    });
+    it("refuse si le statut a changé entre-temps", async () => {
+        fakeAppointmentRepository.setStatusIfCurrent.mockResolvedValue(0);
+        await expect(appointmentService.markOutcome(PRO_ID, 10, "COMPLETED")).rejects.toBeInstanceOf(ConflictError);
+    });
+});

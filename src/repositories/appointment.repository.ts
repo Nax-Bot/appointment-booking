@@ -183,6 +183,26 @@ export class AppointmentRepository {
     });
   }
 
+  // Change le statut d'un rendez-vous SEULEMENT s'il a encore le statut attendu.
+  // Renvoie 1 si le changement a eu lieu, 0 sinon (le statut avait déjà changé entre-temps).
+  async setStatusIfCurrent(
+    id: number,
+    from: AppointmentStatusValue,
+    to: AppointmentStatusValue,
+    db?: Prisma.TransactionClient
+  ) {
+    let client: Prisma.TransactionClient = prisma;
+    if (db) {
+      client = db;
+    }
+
+    const result = await client.appointment.updateMany({
+      where: { id: id, status: from },
+      data: { status: to },
+    });
+    return result.count;
+  }
+
   // Annule les rendez-vous réservés mais jamais payés dans le délai.
   // Un rendez-vous PENDING est libéré si TOUTES ces conditions sont vraies :
   // - il a été créé avant "createdBefore" (le délai de grâce est passé)

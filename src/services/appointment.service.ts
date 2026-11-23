@@ -364,6 +364,38 @@ export class AppointmentService {
         return this.toDetail(updated);
     }
 
+    // Le professionnel clôture un rendez-vous : terminé (COMPLETED) ou client absent (NO_SHOW).
+    // Règles : c'est son rendez-vous, il est CONFIRMED (donc payé ou ajouté à la main) et son heure de début est passée.
+    async markOutcome(professionalId: number, appointmentId: number, outcome: "COMPLETED" | "NO_SHOW"): Promise<AppointmentDetail> {
+        const row = await this.appointmentRepository.findById(appointmentId);
+        // Rendez-vous d'un autre professionnel : on répond "introuvable" (comme pour l'annulation)
+        if (!row || row.professionalId !== professionalId) {
+            throw new NotFoundError("Rendez-vous introuvable");
+        }
+
+        if (row.status === "PENDING") {
+            throw new ConflictError("Ce rendez-vous n'est pas encore confirmé (paiement en attente)");
+        }
+        if (row.status !== "CONFIRMED") {
+            throw new ConflictError("Ce rendez-vous est déjà clôturé ou annulé");
+        }
+        if (row.startDatetime.getTime() > Date.now()) {
+            throw new ConflictError("Ce rendez-vous n'a pas encore commencé");
+        }
+
+        // Changement atomique : si le statut a changé entre-temps (annulation simultanée), on refuse
+        const changed = await this.appointmentRepository.setStatusIfCurrent(appointmentId, "CONFIRMED", outcome);
+        if (changed === 0) {
+            throw new ConflictError("Le statut de ce rendez-vous vient de changer");
+        }
+
+        const updated = await this.appointmentRepository.findById(appointmentId);
+        if (!updated) {
+            throw new NotFoundError("Rendez-vous introuvable");
+        }
+        return this.toDetail(updated);
+    }
+
     // Une personne est concernée par un rendez-vous si elle en est le client ou le professionnel.
     // Un rendez-vous d'invité n'a pas de clientId : seul son professionnel en fait partie.
     private isParticipant(row: AppointmentDetailRow, userId: number, role: Role): boolean {
