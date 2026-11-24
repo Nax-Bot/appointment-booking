@@ -10,6 +10,7 @@ import CodeInput, { CODE_LENGTH } from "@/components/auth/CodeInput";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
+import AuthHeading from "@/components/auth/AuthHeading";
 
 // Même délai que le backend : pas de nouveau code avant 60 secondes
 const RESEND_DELAY_SECONDS = 60;
@@ -172,12 +173,11 @@ function VerifyEmailForm() {
                 <MailCheck className="h-7 w-7" />
             </div>
 
-            <h1 className="text-2xl font-bold text-ink">Vérifiez votre e-mail</h1>
-            <p className="mt-2 mb-6 text-sm leading-relaxed text-muted">
+            <AuthHeading title="Vérifiez votre e-mail">
                 {comesFromLogin ? "Entrez le code à 6 chiffres envoyé à " : "Nous avons envoyé un code à 6 chiffres à "}
                 <span className="font-semibold [overflow-wrap:anywhere] text-ink">{email}</span>. Il est valable{" "}
                 {CODE_LIFETIME_MINUTES} minutes.
-            </p>
+            </AuthHeading>
 
             <SuccessMessage message={infoMessage} />
             <ErrorMessage message={errorMessage} />

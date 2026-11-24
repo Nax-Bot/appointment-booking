@@ -12,6 +12,7 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import AuthHeading from "@/components/auth/AuthHeading";
 
 export default function RegisterPage() {
     const { register } = useSession();
@@ -140,7 +141,7 @@ export default function RegisterPage() {
     return (
         // noValidate : c'est notre code qui valide, pas les bulles du navigateur
         <form onSubmit={handleSubmit} noValidate>
-            <h1 className="mb-6 text-2xl font-bold text-ink">Créer votre compte</h1>
+            <AuthHeading title="Créer votre compte">Quelques informations suffisent pour commencer.</AuthHeading>
 
             <ErrorMessage message={errorMessage} details={errorDetails} isDisplay={isDisplay} />
 

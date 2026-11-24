@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import AuthHeading from "@/components/auth/AuthHeading";
 
 // Un blocage de connexion (réponse 429 du serveur) : pour quel email, jusqu'à quand (ms), et pour combien de secondes au départ.
 // On le garde dans le navigateur pour que le compte à rebours survive à un rechargement de la page.
@@ -168,7 +169,7 @@ export default function LoginPage() {
 
     return (
         <form onSubmit={handleSubmit}>
-            <h1 className="mb-6 text-2xl font-bold text-ink">Connexion</h1>
+            <AuthHeading title="Content de vous revoir">Connectez-vous pour retrouver vos rendez-vous.</AuthHeading>
 
             {isLocked ? (
                 <ErrorMessage

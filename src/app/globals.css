@@ -1,13 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #f6f8fa;
+  --color-page: #f5f7f8;
   --color-tint: #f0fdf4;
-  --color-line: #dbe0e7;
+  --color-line: #e2e8f0;
   --color-ink: #111827;
   --color-muted: #64748b;
   --color-primary: #15803d;
   --color-primary-hover: #166534;
+  /* Palette : Deep Emerald, Mint Accent (utilisables en bg-deep, text-mint...) */
+  --color-deep: #064e3b;
+  --color-mint: #34d399;
 
   /* Un style plus sobre : coins peu arrondis, ombres presque invisibles (la bordure fait le travail) */
   --radius-md: 0.3125rem;
@@ -106,4 +109,55 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+
+/* ---------- Pages d'authentification ---------- */
+
+/* Panneau de gauche : dégradé émeraude, bandes verticales floues et lueur menthe en bas */
+.auth-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 45% at 15% 100%, rgb(52 211 153 / 0.45), transparent 70%),
+    radial-gradient(50% 40% at 90% 40%, rgb(21 128 61 / 0.35), transparent 70%),
+    linear-gradient(180deg, #02110c 0%, #064e3b 55%, #04281e 100%);
+}
+.auth-panel::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.07) 0 60px,
+    rgb(0 0 0 / 0.22) 60px 120px
+  );
+  filter: blur(14px);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 45%, #000 100%);
+}
+.auth-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.35) 0%, transparent 35%, rgb(0 0 0 / 0.35) 100%);
+}
+
+/* Formulaire : champs plus arrondis, bouton plein avec halo */
+.auth-form input {
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+}
+.auth-form button[type="submit"] {
+  margin-top: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--color-mint) 70%, transparent);
+}
+.auth-form button[aria-haspopup="listbox"] {
+  border-radius: 0.75rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
 }
