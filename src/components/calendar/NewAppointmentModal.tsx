@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Banknote, CalendarClock, Clock, Info, Phone, User } from "lucide-react";
 import Link from "next/link";
-import { apiGet, apiPost, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, apiPost, ApiError } from "@/lib/client/api-client";
 import { useSession } from "@/context/session-context";
 import { Availability, Offer, Unavailability } from "@/types/api";
 import { AppointmentDetail, CreateManualAppointmentInput, SlotsResult } from "@/types/booking";
-import { formatDuration, formatPrice } from "@/lib/lib-front/format";
-import { getTodayLocalDate } from "@/lib/lib-front/booking-format";
-import { isRealDateText } from "@/lib/datetime";
+import { formatDuration, formatPrice } from "@/lib/client/format/format";
+import { getTodayLocalDate } from "@/lib/client/format/booking-format";
+import { isRealDateText } from "@/lib/shared/datetime";
 import {
     absencesOnDate,
     appointmentsOnDate,
@@ -18,7 +18,7 @@ import {
     getShortLongDate,
     minutesToClock,
     timeToMinutes,
-} from "@/lib/lib-front/calendar-utils";
+} from "@/lib/client/calendar/calendar-utils";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";

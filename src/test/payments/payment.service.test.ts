@@ -1,13 +1,13 @@
 import { createHmac } from "crypto";
 import { PaymentService } from "../../services/payment.service";
-import { FakePaymentGateway } from "../../lib/payments/fake-gateway";
-import { encryptSecret } from "../../lib/secret-box";
-import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "../../lib/errors";
+import { FakePaymentGateway } from "../../lib/server/payments/fake-gateway";
+import { encryptSecret } from "../../lib/server/auth/secret-box";
+import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "../../lib/server/http/errors";
 
 jest.mock("../../repositories/payment-account.repository", () => ({}));
 jest.mock("../../repositories/payment.repository", () => ({}));
 jest.mock("../../repositories/appointment.repository", () => ({}));
-jest.mock("../../lib/transaction-runner", () => ({}));
+jest.mock("../../lib/server/db/transaction-runner", () => ({}));
 
 const SECRET = "pwhsec_" + "a".repeat(64);
 const db = { name: "tx" };

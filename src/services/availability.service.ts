@@ -1,9 +1,9 @@
 import { AvailabilityRepository, AvailabilityData } from "@/repositories/availability.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { toLocalMoment, timeColumnToMinutes, dateColumnToText, minutesToText } from "@/lib/datetime";
-import { TimeBlock, mergeTimeBlocks, isCoveredByBlocks } from "@/lib/slot-grid";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/server/http/errors";
+import { toLocalMoment, timeColumnToMinutes, dateColumnToText, minutesToText } from "@/lib/shared/datetime";
+import { TimeBlock, mergeTimeBlocks, isCoveredByBlocks } from "@/lib/server/booking/slot-grid";
 
 // Données reçues (heures en "HH:mm", dates en "AAAA-MM-JJ")
 export interface AvailabilityInput {

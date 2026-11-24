@@ -2,7 +2,7 @@
 
 import { Availability, Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { WEEK_DAYS } from "@/lib/lib-front/days";
+import { WEEK_DAYS } from "@/lib/client/format/days";
 import {
     absencesOnDate,
     appointmentsOnDate,
@@ -11,8 +11,8 @@ import {
     getMonthDates,
     minutesToClock,
     monthKey,
-} from "@/lib/lib-front/calendar-utils";
-import { TONES, isMutedStatus, toneOf } from "@/lib/lib-front/calendar-theme";
+} from "@/lib/client/calendar/calendar-utils";
+import { TONES, isMutedStatus, toneOf } from "@/lib/client/calendar/calendar-theme";
 import StatusIcon from "@/components/calendar/StatusIcon";
 
 // La vue « Mois » : une case par jour, avec de petites pastilles compactes

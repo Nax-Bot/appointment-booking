@@ -1,7 +1,7 @@
 "use client";
 
 import LottieLoader, { LoaderKind } from "@/components/ui/LottieLoader";
-import { LoaderTone } from "@/lib/lib-front/lottie-theme";
+import { LoaderTone } from "@/lib/client/ui/lottie-theme";
 
 // Le chargement d'une zone entière (une page, une liste) : animation + texte, centrés.
 interface PageLoadingProps {

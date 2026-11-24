@@ -1,6 +1,6 @@
 "use client";
 
-import { WEEK_DAYS } from "@/lib/lib-front/days";
+import { WEEK_DAYS } from "@/lib/client/format/days";
 
 // Sept pastilles Lun ... Dim : on clique pour cocher ou décocher un jour.
 // selectedDays = les jours cochés (valeurs du backend : 0 = dimanche ... 6 = samedi)

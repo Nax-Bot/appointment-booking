@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MailCheck } from "lucide-react";
 import { useSession } from "@/context/session-context";
-import { ApiError } from "@/lib/lib-front/api-client";
+import { ApiError } from "@/lib/client/api-client";
 import CodeInput, { CODE_LENGTH } from "@/components/auth/CodeInput";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";

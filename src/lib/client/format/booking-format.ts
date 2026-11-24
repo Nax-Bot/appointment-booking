@@ -1,4 +1,4 @@
-import { toLocalMoment } from "@/lib/datetime";
+import { toLocalMoment } from "@/lib/shared/datetime";
 
 // La date d'aujourd'hui à Madagascar, au format « 2026-11-09 »
 export function getTodayLocalDate(): string {
@@ -8,7 +8,7 @@ export function getTodayLocalDate(): string {
 // Le statut du backend en français : « PENDING » donne « En attente »
 export function getStatusLabel(status: string): string {
     if (status === "PENDING") {
-        return "En attente";
+        return "En attente de paiement";
     }
     if (status === "CONFIRMED") {
         return "Confirmé";

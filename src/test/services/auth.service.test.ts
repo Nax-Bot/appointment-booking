@@ -3,15 +3,15 @@ import { RateLimitService } from "../../services/rate-limit.service";
 import type { UserRepository } from "../../repositories/user.repository";
 import type { EmailVerificationRepository } from "../../repositories/email-verification.repository";
 import type { RateLimitRepository } from "../../repositories/rate-limit.repository";
-import type { EmailSender } from "../../lib/email-sender";
-import { ConflictError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/errors";
+import type { EmailSender } from "../../lib/server/email/email-sender";
+import { ConflictError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/server/http/errors";
 
 jest.mock("../../repositories/user.repository", () => ({}));
 jest.mock("../../repositories/email-verification.repository", () => ({}));
 jest.mock("../../repositories/rate-limit.repository", () => ({}));
 
 // Le mot de passe "haché" est le mot de passe lui-même : on teste la limitation, pas bcrypt
-jest.mock("../../lib/auth", () => ({
+jest.mock("../../lib/server/auth/auth", () => ({
     hashPassword: async (password: string) => password,
     verifyPassword: async (password: string, hash: string) => password === hash,
 }));

@@ -1,8 +1,8 @@
 "use client"; // Pour utiliser les clients components
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { apiGet, apiPost, ApiError } from "@/lib/lib-front/api-client";
-import { startProgress, doneProgress } from "@/lib/lib-front/progress";
+import { apiGet, apiPost, ApiError } from "@/lib/client/api-client";
+import { startProgress, doneProgress } from "@/lib/client/ui/progress";
 import { AuthUser, RegisterInput, RegisterResult } from "@/types/api";
 
 // Ce que le contexte met à disposition de toutes les pages

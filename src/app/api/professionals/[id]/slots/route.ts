@@ -1,4 +1,4 @@
-import { slotController } from "@/lib/container";
+import { slotController } from "@/lib/server/container";
 
 export async function GET(
     req: Request,

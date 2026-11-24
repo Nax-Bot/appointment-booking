@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import LottieLoader, { LoaderKind } from "@/components/ui/LottieLoader";
-import { LoaderTone } from "@/lib/lib-front/lottie-theme";
+import { LoaderTone } from "@/lib/client/ui/lottie-theme";
 
 // Un bouton.
 // variant : "primary" (plein), "secondary" (blanc avec bordure, pour « Annuler »)

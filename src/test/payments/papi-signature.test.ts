@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { verifyPapiSignature } from "../../lib/payments/papi-signature";
+import { verifyPapiSignature } from "../../lib/server/payments/papi-signature";
 
 const SECRET = "pwhsec_" + "a".repeat(64);
 const BODY = '{"paymentStatus":"SUCCESS","amount":1000}';

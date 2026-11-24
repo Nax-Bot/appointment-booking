@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { getAuthSecret } from "@/lib/server/auth/auth-secret";
 
 // Les deux rôles possibles
 export type Role = "CLIENT" | "PROFESSIONAL";

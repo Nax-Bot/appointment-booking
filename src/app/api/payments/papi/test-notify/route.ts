@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyPapiSignature } from "../../../../../lib/payments/papi-signature";
+import { verifyPapiSignature } from "../../../../../lib/server/payments/papi-signature";
 
 // ROUTE TEMPORAIRE pour le premier test : elle vérifie la signature et affiche la notification.
 // Elle ne touche pas à la base de données. Elle sera remplacée par la vraie route.

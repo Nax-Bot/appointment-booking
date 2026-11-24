@@ -1,4 +1,4 @@
-import { unavailabilityController } from "@/lib/container";
+import { unavailabilityController } from "@/lib/server/container";
 
 export async function PUT(
     req: Request,

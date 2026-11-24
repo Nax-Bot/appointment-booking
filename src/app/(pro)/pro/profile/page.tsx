@@ -4,7 +4,7 @@ import { SubmitEvent, useEffect, useState } from "react";
 import PageLoading from "@/components/ui/PageLoading";
 import { Pencil } from "lucide-react";
 import { useSession } from "@/context/session-context";
-import { apiGet, apiPatch, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, apiPatch, ApiError } from "@/lib/client/api-client";
 import { Professional, UpdateProfileInput } from "@/types/api";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
@@ -13,6 +13,7 @@ import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import PageHeader from "@/components/ui/PageHeader";
+import PaymentAccountSection from "@/components/payments/PaymentAccountSection";
 
 // Mêmes limites que le backend
 const SPECIALTY_MAX = 150;
@@ -279,6 +280,9 @@ export default function ProProfilePage() {
                     />
                 </div>
             </section>
+
+            {/* Paiement en ligne (boutique Papi) */}
+            <PaymentAccountSection />
 
             {/* La fenêtre de modification */}
             <Modal open={modalOpen} title="Modifier ma présentation" onClose={closeModal}>

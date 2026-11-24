@@ -1,8 +1,8 @@
 import { Availability, Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { dayOfWeekOfDateText, localMidnightToUtc } from "@/lib/datetime";
-import { addDays } from "@/lib/lib-front/unavailability-format";
-import { getDayOrder } from "@/lib/lib-front/days";
+import { dayOfWeekOfDateText, localMidnightToUtc } from "@/lib/shared/datetime";
+import { addDays } from "@/lib/client/format/unavailability-format";
+import { getDayOrder } from "@/lib/client/format/days";
 
 // Tout le calendrier travaille en heure locale de Madagascar, avec des dates « AAAA-MM-JJ »
 // et des heures exprimées en MINUTES depuis minuit (09:30 = 570).

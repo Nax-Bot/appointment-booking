@@ -4,8 +4,8 @@ import type { ProfessionalRepository } from "../../repositories/professional.rep
 import type { OfferRepository } from "../../repositories/offer.repository";
 import type { AvailabilityRepository } from "../../repositories/availability.repository";
 import type { UnavailabilityRepository } from "../../repositories/unavailability.repository";
-import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors";
-import type { TransactionRunner } from "../../lib/transaction-runner";
+import { ConflictError, NotFoundError, ValidationError } from "../../lib/server/http/errors";
+import type { TransactionRunner } from "../../lib/server/db/transaction-runner";
 
 // On ne charge jamais les vrais repositories (ni Prisma) ni lib/auth
 jest.mock("../../repositories/appointment.repository", () => ({}));
@@ -13,8 +13,8 @@ jest.mock("../../repositories/professional.repository", () => ({}));
 jest.mock("../../repositories/offer.repository", () => ({}));
 jest.mock("../../repositories/availability.repository", () => ({}));
 jest.mock("../../repositories/unavailability.repository", () => ({}));
-jest.mock("../../lib/auth", () => ({}));
-jest.mock("../../lib/transaction-runner", () => ({}));
+jest.mock("../../lib/server/auth/auth", () => ({}));
+jest.mock("../../lib/server/db/transaction-runner", () => ({}));
 
 // Un faux repository : un objet dont chaque propriété est une fonction espionne
 type FakeRepository = Record<string, jest.Mock>;

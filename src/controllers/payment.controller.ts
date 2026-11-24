@@ -1,7 +1,7 @@
 import { BaseController } from "@/controllers/base.controller";
 import { PaymentService } from "@/services/payment.service";
 import { setupPaymentAccountSchema } from "@/validations/payment.validation";
-import { jsonOk } from "@/lib/http";
+import { jsonOk } from "@/lib/server/http/http";
 
 export class PaymentController extends BaseController {
     private paymentService: PaymentService;

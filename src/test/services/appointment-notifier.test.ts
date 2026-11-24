@@ -1,5 +1,5 @@
 import { AppointmentNotifier } from "../../services/appointment-notifier.service";
-import { buildAppointmentCancelledEmail, buildAppointmentConfirmedEmail } from "../../lib/email-templates";
+import { buildAppointmentCancelledEmail, buildAppointmentConfirmedEmail } from "../../lib/server/email/email-templates";
 
 jest.mock("../../repositories/appointment.repository", () => ({}));
 

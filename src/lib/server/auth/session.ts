@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createToken, verifyToken, Role, SessionData } from "@/lib/auth";
+import { createToken, verifyToken, Role, SessionData } from "@/lib/server/auth/auth";
 
 const COOKIE_NAME = "session";
 const SEVEN_DAYS_IN_SECONDS = 60 * 60 * 24 * 7;

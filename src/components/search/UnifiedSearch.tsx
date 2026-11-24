@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, Stethoscope, Users, X } from "lucide-react";
-import { apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, ApiError } from "@/lib/client/api-client";
 import { ServiceSuggestion } from "@/types/api";
 import { ProfessionalSearchItem } from "@/types/booking";
-import { SEARCH_PAUSE_MS } from "@/lib/lib-front/search-config";
+import { SEARCH_PAUSE_MS } from "@/lib/client/ui/search-config";
 import PageLoading from "@/components/ui/PageLoading";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import ProfessionalCard from "@/components/professionals/ProfessionalCard";

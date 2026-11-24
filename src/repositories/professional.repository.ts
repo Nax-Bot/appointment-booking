@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/db/prisma";
 import { Prisma } from "@/generated/prisma/client";
 
 // Données modifiables du profil (undefined = ne pas toucher, null = effacer)

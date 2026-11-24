@@ -1,6 +1,6 @@
 import { AppointmentDetail } from "@/types/booking";
-import { addDays, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { startOfWeek } from "@/lib/lib-front/calendar-utils";
+import { addDays, toLocalParts } from "@/lib/client/format/unavailability-format";
+import { startOfWeek } from "@/lib/client/calendar/calendar-utils";
 
 // Les rendez-vous qui comptent dans la charge de travail (ni annulés, ni « non présenté »)
 function isActive(item: AppointmentDetail): boolean {

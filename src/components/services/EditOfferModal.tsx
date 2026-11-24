@@ -1,9 +1,9 @@
 "use client";
 
 import { SubmitEvent, useState } from "react";
-import { apiPut, ApiError } from "@/lib/lib-front/api-client";
+import { apiPut, ApiError } from "@/lib/client/api-client";
 import { Offer, SetOfferInput } from "@/types/api";
-import { getDurationError, getPriceError, parseNumber } from "@/lib/lib-front/offer-validation";
+import { getDurationError, getPriceError, parseNumber } from "@/lib/client/validation/offer-validation";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";

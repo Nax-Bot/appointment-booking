@@ -1,10 +1,10 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
-import type { EmailSender } from "@/lib/email-sender";
-import type { SmtpConfig } from "@/lib/smtp-config";
-import { buildVerificationEmail, buildAccountExistsEmail } from "@/lib/email-templates";
-import type { EmailContent } from "@/lib/email-templates";
-import { CODE_LIFETIME_MINUTES } from "@/lib/verification-code";
+import type { EmailSender } from "@/lib/server/email/email-sender";
+import type { SmtpConfig } from "@/lib/server/email/smtp-config";
+import { buildVerificationEmail, buildAccountExistsEmail } from "@/lib/server/email/email-templates";
+import type { EmailContent } from "@/lib/server/email/email-templates";
+import { CODE_LIFETIME_MINUTES } from "@/lib/server/auth/verification-code";
 
 // Un vrai envoyeur d'emails, par SMTP
 export class SmtpEmailSender implements EmailSender {

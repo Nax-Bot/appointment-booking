@@ -1,7 +1,7 @@
 import { OfferRepository } from "@/repositories/offer.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { ServiceRepository } from "@/repositories/service.repository";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/server/http/errors";
 
 // Données reçues pour proposer un service : la durée et le prix du professionnel
 export interface SetOfferData {

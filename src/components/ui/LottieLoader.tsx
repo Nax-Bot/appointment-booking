@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 import { useSession } from "@/context/session-context";
-import { applyTone, LoaderTone } from "@/lib/lib-front/lottie-theme";
+import { applyTone, LoaderTone } from "@/lib/client/ui/lottie-theme";
 
 import spinner from "@/assets/lottie/spinner.json";
 import dots from "@/assets/lottie/dots.json";

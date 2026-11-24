@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/db/prisma";
 import { Prisma } from "@/generated/prisma/client";
 
 // Le client à passer aux repositories pour que leurs requêtes fassent partie de la transaction

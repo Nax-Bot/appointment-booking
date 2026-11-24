@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Banknote, CalendarPlus, ChevronRight, Clock, Phone } from "lucide-react";
 import { Role } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { formatPrice } from "@/lib/lib-front/format";
-import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { getStatusLabel, getStatusStyle } from "@/lib/lib-front/booking-format";
-import { getInitials } from "@/lib/lib-front/text-helpers";
-import { clientName, clientPhone } from "@/lib/lib-front/calendar-utils";
+import { formatPrice } from "@/lib/client/format/format";
+import { formatLongDate, toLocalParts } from "@/lib/client/format/unavailability-format";
+import { getStatusLabel, getStatusStyle } from "@/lib/client/format/booking-format";
+import { getInitials } from "@/lib/client/format/text-helpers";
+import { clientName, clientPhone } from "@/lib/client/calendar/calendar-utils";
+import PayButton from "@/components/payments/PayButton";
+import OutcomeActions, { canMarkOutcome } from "@/components/payments/OutcomeActions";
 
 // Une carte de rendez-vous.
 // role = le rôle de la personne connectée : il décide de qui on montre (le professionnel ou le client).
@@ -18,6 +20,8 @@ interface AppointmentCardProps {
     muted: boolean;
     canCancel: boolean;
     onCancel: (item: AppointmentDetail) => void;
+    // Le professionnel a clôturé le rendez-vous (la liste doit se recharger)
+    onOutcomeDone?: () => void;
 }
 
 export default function AppointmentCard({
@@ -26,6 +30,7 @@ export default function AppointmentCard({
     muted,
     canCancel,
     onCancel,
+    onOutcomeDone,
 }: AppointmentCardProps) {
     // Les dates reçues sont en UTC : on les convertit en heure de Madagascar
     const start = toLocalParts(item.startDatetime);
@@ -123,6 +128,12 @@ export default function AppointmentCard({
                 </div>
             )}
 
+            {onOutcomeDone !== undefined && canMarkOutcome(item) && (
+                <div className="mt-4">
+                    <OutcomeActions item={item} onDone={onOutcomeDone} />
+                </div>
+            )}
+
             {canCancel && (
                 <div className="mt-4 flex justify-end">
                     <button
@@ -173,6 +184,8 @@ function ClientAppointmentCard({
     const canRebook = canCancel === false;
     const rebookHref = "/professionals/" + item.professional.userId + "?serviceId=" + item.service.id;
 
+    // Un rendez-vous en attente (pas encore passé) se paie en ligne
+    const canPay = item.status === "PENDING" && canCancel;
     const hasFooter = item.priceAtBooking !== null || canCancel || canRebook;
 
     return (
@@ -261,7 +274,8 @@ function ClientAppointmentCard({
                         <span />
                     )}
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-start gap-1.5">
+                        {canPay && <PayButton appointmentId={item.id} compact={true} />}
                         {canCancel && (
                             <button
                                 type="button"

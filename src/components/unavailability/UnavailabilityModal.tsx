@@ -1,7 +1,7 @@
 "use client";
 
 import { SubmitEvent, useState } from "react";
-import { apiPost, apiPut, ApiError } from "@/lib/lib-front/api-client";
+import { apiPost, apiPut, ApiError } from "@/lib/client/api-client";
 import { Unavailability, UnavailabilityInput } from "@/types/api";
 import {
     REASON_MAX,
@@ -9,8 +9,8 @@ import {
     getReasonError,
     getRequiredDateError,
     getRequiredTimeError,
-} from "@/lib/lib-front/unavailability-validation";
-import { addDays, getAbsenceParts, localToIso } from "@/lib/lib-front/unavailability-format";
+} from "@/lib/client/validation/unavailability-validation";
+import { addDays, getAbsenceParts, localToIso } from "@/lib/client/format/unavailability-format";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";

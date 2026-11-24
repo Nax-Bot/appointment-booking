@@ -14,18 +14,19 @@ import {
     Sparkles,
 } from "lucide-react";
 import { useSession } from "@/context/session-context";
-import { apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, ApiError } from "@/lib/client/api-client";
 import { AppointmentDetail } from "@/types/booking";
-import { computeDashboardStats, DashboardStats } from "@/lib/lib-front/dashboard-stats";
-import { clientName, clientPhone } from "@/lib/lib-front/calendar-utils";
-import { getStatusLabel, getStatusStyle, getTodayLocalDate } from "@/lib/lib-front/booking-format";
-import { formatPrice } from "@/lib/lib-front/format";
-import { getInitials } from "@/lib/lib-front/text-helpers";
-import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { TONES } from "@/lib/lib-front/calendar-theme";
+import { computeDashboardStats, DashboardStats } from "@/lib/client/data/dashboard-stats";
+import { clientName, clientPhone } from "@/lib/client/calendar/calendar-utils";
+import { getStatusLabel, getStatusStyle, getTodayLocalDate } from "@/lib/client/format/booking-format";
+import { formatPrice } from "@/lib/client/format/format";
+import { getInitials } from "@/lib/client/format/text-helpers";
+import { formatLongDate, toLocalParts } from "@/lib/client/format/unavailability-format";
+import { TONES } from "@/lib/client/calendar/calendar-theme";
 import PageLoading from "@/components/ui/PageLoading";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import PageHeader from "@/components/ui/PageHeader";
+import PaymentSetupBanner from "@/components/payments/PaymentSetupBanner";
 
 // Combien de demandes on montre sur le tableau de bord (les autres sont dans « Rendez-vous »)
 const MAX_PENDING_SHOWN = 5;
@@ -93,6 +94,7 @@ export default function ProDashboard() {
                 }
             />
 
+            <PaymentSetupBanner />
             <ErrorMessage message={loadError} details={[]} />
 
             {/* Les chiffres clés */}
@@ -113,7 +115,7 @@ export default function ProDashboard() {
                     icon={<Hourglass className="h-5 w-5" />}
                     label="En attente"
                     value={String(stats.pending.length)}
-                    hint={stats.pending.length === 0 ? "Aucune demande" : "Demandes de clients"}
+                    hint={stats.pending.length === 0 ? "Aucun paiement attendu" : "Paiements attendus"}
                     accent={stats.pending.length > 0 ? "amber" : "default"}
                 />
                 <StatCard
@@ -224,8 +226,8 @@ function PendingPanel({ pending }: { pending: AppointmentDetail[] }) {
 
     return (
         <Panel
-            title="Demandes en attente"
-            subtitle={pending.length > 0 ? "Rendez-vous demandés par vos clients" : undefined}
+            title="En attente de paiement"
+            subtitle={pending.length > 0 ? "Confirmés automatiquement au paiement" : undefined}
             action={
                 pending.length > 0 ? (
                     <Link
@@ -239,7 +241,7 @@ function PendingPanel({ pending }: { pending: AppointmentDetail[] }) {
             }
         >
             {pending.length === 0 ? (
-                <EmptyLine icon={<Check className="h-5 w-5" strokeWidth={3} />} text="Aucune demande en attente." />
+                <EmptyLine icon={<Check className="h-5 w-5" strokeWidth={3} />} text="Aucun paiement en attente." />
             ) : (
                 <ul className="divide-y divide-line">
                     {shown.map((item) => {

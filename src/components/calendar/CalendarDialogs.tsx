@@ -3,15 +3,16 @@
 import { CalendarOff, CalendarPlus, CalendarClock, Pencil, Phone, Trash2, Banknote, Clock } from "lucide-react";
 import { Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { AvailabilityGroup, describeGroup } from "@/lib/lib-front/availability-groups";
-import { formatPrice } from "@/lib/lib-front/format";
-import { getStatusLabel } from "@/lib/lib-front/booking-format";
-import { TONES, toneOf } from "@/lib/lib-front/calendar-theme";
+import { AvailabilityGroup, describeGroup } from "@/lib/client/data/availability-groups";
+import { formatPrice } from "@/lib/client/format/format";
+import { getStatusLabel } from "@/lib/client/format/booking-format";
+import { TONES, toneOf } from "@/lib/client/calendar/calendar-theme";
 import StatusIcon from "@/components/calendar/StatusIcon";
-import { describeAbsence, formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { clientName, clientPhone, getShortLongDate, minutesToClock } from "@/lib/lib-front/calendar-utils";
+import { describeAbsence, formatLongDate, toLocalParts } from "@/lib/client/format/unavailability-format";
+import { clientName, clientPhone, getShortLongDate, minutesToClock } from "@/lib/client/calendar/calendar-utils";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import OutcomeActions, { canMarkOutcome } from "@/components/payments/OutcomeActions";
 
 // ---------------------------------------------------------------------------
 // Fenêtre ouverte en cliquant sur un créneau vide : que veut-on ajouter ?
@@ -134,10 +135,11 @@ interface AppointmentDialogProps {
     item: AppointmentDetail;
     canCancel: boolean;
     onCancel: () => void;
+    onOutcomeDone: () => void;
     onClose: () => void;
 }
 
-export function AppointmentDialog({ item, canCancel, onCancel, onClose }: AppointmentDialogProps) {
+export function AppointmentDialog({ item, canCancel, onCancel, onOutcomeDone, onClose }: AppointmentDialogProps) {
     const start = toLocalParts(item.startDatetime);
     const end = toLocalParts(item.endDatetime);
 
@@ -195,6 +197,13 @@ export function AppointmentDialog({ item, canCancel, onCancel, onClose }: Appoin
                     {item.cancellationReason !== null && (
                         <p className="mt-0.5 break-words text-muted">Motif : {item.cancellationReason}</p>
                     )}
+                </div>
+            )}
+
+            {canMarkOutcome(item) && (
+                <div className="mt-4 rounded-xl border border-line bg-page p-3">
+                    <p className="mb-2 text-sm font-medium text-ink">Ce rendez-vous a eu lieu ?</p>
+                    <OutcomeActions item={item} onDone={onOutcomeDone} />
                 </div>
             )}
 

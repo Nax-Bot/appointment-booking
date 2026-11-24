@@ -6,7 +6,7 @@ import {
   verifyEmailSchema,
   resendCodeSchema,
 } from "@/validations/auth.validation";
-import { createSession, destroySession } from "@/lib/session";
+import { createSession, destroySession } from "@/lib/server/auth/session";
 
 export class AuthController extends BaseController {
   private authService: AuthService;

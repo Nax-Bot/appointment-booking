@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck, LogOut } from "lucide-react";
 import { useSession } from "@/context/session-context";
-import { getInitials } from "@/lib/lib-front/text-helpers";
+import { getInitials } from "@/lib/client/format/text-helpers";
 import RoutePrefetcher from "@/components/layout/RoutePrefetcher";
 import LottieLoader from "@/components/ui/LottieLoader";
 import { NavLink } from "@/components/layout/Navbar";

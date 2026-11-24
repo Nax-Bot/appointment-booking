@@ -1,8 +1,8 @@
 import { UnavailabilityRepository, UnavailabilityData } from "@/repositories/unavailability.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { toLocalMoment, minutesToText } from "@/lib/datetime";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/server/http/errors";
+import { toLocalMoment, minutesToText } from "@/lib/shared/datetime";
 
 // Données reçues (dates ISO 8601 avec fuseau)
 export interface UnavailabilityInput {

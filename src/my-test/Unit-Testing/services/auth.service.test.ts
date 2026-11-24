@@ -13,12 +13,12 @@ import { EmailVerificationRepository } from "@/repositories/email-verification.r
 // IMPORTATION DU LOGIQUE METIER DU LIMITATION DE TENTATIVE DE CONNEXION
 import { RateLimitService } from "@/services/rate-limit.service";
 
-import { EmailSender } from "@/lib/email-sender";
+import { EmailSender } from "@/lib/server/email/email-sender";
 import {
     hashPassword,
     verifyPassword,
     Role
-} from "@/lib/auth";
+} from "@/lib/server/auth/auth"
 
 import {
     generateCode,
@@ -29,7 +29,7 @@ import {
     RESEND_DELAY_SECONDS,
     UNVERIFIED_ACCOUNT_LIFETIME_HOURS
 
-} from "@/lib/verification-code";
+} from "@/lib/server/auth/verification-code";
 
 import {
     LOGIN_BY_PAIR_RULE,
@@ -40,7 +40,7 @@ import {
     RESEND_BY_IP_RULE,
     ACCOUNT_NOTICE_RULE,
     RateLimitRule
-} from "@/lib/rate-limit-rules";
+} from "@/lib/server/auth/rate-limit-rules";
 
 // IMPORTATION DES DIFFERENTS ERRORS
 import {
@@ -50,7 +50,7 @@ import {
     TooManyRequestsError,
     UnauthorizedError,
     ValidationError,
-} from "@/lib/errors";
+} from "@/lib/server/http/errors";
 
 // IMPORTATION DES DONNÉE EN INPUT POUR LES SERVICES D'AUTHENTIFICATION
 import {

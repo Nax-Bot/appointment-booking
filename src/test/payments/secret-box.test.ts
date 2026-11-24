@@ -1,4 +1,4 @@
-import { encryptSecret, decryptSecret } from "../../lib/secret-box";
+import { encryptSecret, decryptSecret } from "../../lib/server/auth/secret-box";
 
 describe("secret-box", () => {
     const old = process.env.PAYMENT_ENCRYPTION_KEY;

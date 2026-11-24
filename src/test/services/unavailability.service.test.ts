@@ -3,7 +3,7 @@ import type { UnavailabilityRepository } from '../../repositories/unavailability
 import type { ProfessionalRepository } from '../../repositories/professional.repository';
 import type { AppointmentRepository } from '../../repositories/appointment.repository';
 
-import { ConflictError, NotFoundError, ValidationError } from '../../lib/errors';
+import { ConflictError, NotFoundError, ValidationError } from '../../lib/server/http/errors';
 
 jest.mock('../../repositories/unavailability.repository', () => ({}));
 jest.mock('../../repositories/professional.repository', () => ({}));

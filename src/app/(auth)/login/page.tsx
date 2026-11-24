@@ -4,7 +4,7 @@ import { SubmitEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
-import { ApiError } from "@/lib/lib-front/api-client";
+import { ApiError } from "@/lib/client/api-client";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";

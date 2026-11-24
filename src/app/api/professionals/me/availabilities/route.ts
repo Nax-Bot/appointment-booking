@@ -1,4 +1,4 @@
-import { availabilityController } from "@/lib/container";
+import { availabilityController } from "@/lib/server/container";
 
 export async function GET() {
     return availabilityController.listMine();

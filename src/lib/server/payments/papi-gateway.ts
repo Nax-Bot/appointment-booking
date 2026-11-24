@@ -1,4 +1,4 @@
-import { ServiceUnavailableError, ValidationError } from "../errors";
+import { ServiceUnavailableError, ValidationError } from "../http/errors";
 import {
     CreatePaymentLinkInput,
     GatewayCredentials,

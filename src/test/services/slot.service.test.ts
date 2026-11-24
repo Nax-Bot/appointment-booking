@@ -6,7 +6,7 @@ import type { AvailabilityRepository } from "../../repositories/availability.rep
 import type { UnavailabilityRepository } from "../../repositories/unavailability.repository";
 import type { AppointmentRepository } from "../../repositories/appointment.repository";
 
-import { NotFoundError, ValidationError } from "../../lib/errors";
+import { NotFoundError, ValidationError } from "../../lib/server/http/errors";
 
 jest.mock("../../repositories/professional.repository", () => ({}));
 jest.mock("../../repositories/offer.repository", () => ({}));

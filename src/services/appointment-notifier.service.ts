@@ -1,10 +1,10 @@
 import type { AppointmentRepository } from "@/repositories/appointment.repository";
-import type { EmailSender } from "@/lib/email-sender";
+import type { EmailSender } from "@/lib/server/email/email-sender";
 import {
     buildAppointmentConfirmedEmail,
     buildAppointmentCancelledEmail,
     type AppointmentEmailInfo,
-} from "@/lib/email-templates";
+} from "@/lib/server/email/email-templates";
 
 // Qui a annulé un rendez-vous
 export type CancelledBy = "CLIENT" | "PROFESSIONAL" | "SYSTEM";

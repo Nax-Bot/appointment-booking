@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth";
-import { jsonError } from "@/lib/http";
+import { verifyToken } from "@/lib/server/auth/auth";
+import { jsonError } from "@/lib/server/http/http";
 
 // Même nom de cookie que dans lib/session.ts
 const SESSION_COOKIE_NAME = "session";

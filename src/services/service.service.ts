@@ -1,7 +1,7 @@
 import { ServiceRepository } from "@/repositories/service.repository";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
-import { ConflictError, NotFoundError } from "@/lib/errors";
-import { normalizeName } from "@/lib/text";
+import { ConflictError, NotFoundError } from "@/lib/server/http/errors";
+import { normalizeName } from "@/lib/server/booking/text";
 import { OfferItem } from "@/services/offer.service";
 
 // On ne renvoie jamais plus de 10 suggestions

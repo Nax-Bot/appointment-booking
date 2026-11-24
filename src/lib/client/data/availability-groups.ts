@@ -1,5 +1,5 @@
 import { Availability } from "@/types/api";
-import { WEEK_DAYS, getDayOrder } from "@/lib/lib-front/days";
+import { WEEK_DAYS, getDayOrder } from "@/lib/client/format/days";
 
 // À partir de combien de jours qui se suivent on écrit « Lun – Jeu » au lieu de « Lun, Mar »
 const MIN_RUN_FOR_RANGE = 3;

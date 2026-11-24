@@ -1,10 +1,10 @@
-import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/payment-rules";
+import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/server/payments/payment-rules";
 import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/server/http/errors";
 import {
     isRealDateText,
     dayOfWeekOfDateText,
@@ -12,8 +12,8 @@ import {
     minutesToText,
     timeColumnToMinutes,
     dateColumnToText,
-} from "@/lib/datetime";
-import { SLOT_STEP_MINUTES, TimeBlock, mergeTimeBlocks } from "@/lib/slot-grid";
+} from "@/lib/shared/datetime";
+import { SLOT_STEP_MINUTES, TimeBlock, mergeTimeBlocks } from "@/lib/server/booking/slot-grid";
 
 // Un créneau libre : instants en UTC pour réserver, heures locales pour l'affichage
 export interface SlotItem {

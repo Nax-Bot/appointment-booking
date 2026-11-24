@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { apiGet } from "@/lib/lib-front/api-client";
+import { apiGet } from "@/lib/client/api-client";
 import { ProfessionalSearchItem } from "@/types/booking";
-import { getInitials } from "@/lib/lib-front/text-helpers";
+import { getInitials } from "@/lib/client/format/text-helpers";
 
 // Nombre maximum de professionnels proposés dans le carrousel
 const MAX_SUGGESTIONS = 12;

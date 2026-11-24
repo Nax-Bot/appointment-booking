@@ -1,4 +1,4 @@
-import { getAuthSecret } from "../../lib/auth-secret";
+import { getAuthSecret } from "../../lib/server/auth/auth-secret";
 
 const SAVED_ENV = { ...process.env };
 

@@ -5,9 +5,9 @@ import PageLoading from "@/components/ui/PageLoading";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Stethoscope } from "lucide-react";
-import { apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, ApiError } from "@/lib/client/api-client";
 import { Professional } from "@/types/api";
-import { getInitials } from "@/lib/lib-front/text-helpers";
+import { getInitials } from "@/lib/client/format/text-helpers";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import BookingPanel from "@/components/booking/BookingPanel";
 

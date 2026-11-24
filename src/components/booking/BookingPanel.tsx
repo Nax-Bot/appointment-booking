@@ -4,19 +4,21 @@ import { useEffect, useState } from "react";
 import PageLoading from "@/components/ui/PageLoading";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Banknote, CalendarCheck, Check, Clock } from "lucide-react";
-import { apiGet, apiPost, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, apiPost, ApiError } from "@/lib/client/api-client";
 import { Availability, Offer } from "@/types/api";
 import { AppointmentItem, CreateAppointmentInput, Slot, SlotsResult } from "@/types/booking";
-import { formatDuration, formatPrice } from "@/lib/lib-front/format";
-import { getDateError } from "@/lib/lib-front/availability-validation";
-import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
-import { getStatusLabel, getTodayLocalDate } from "@/lib/lib-front/booking-format";
+import { formatDuration, formatPrice } from "@/lib/client/format/format";
+import { getDateError } from "@/lib/client/validation/availability-validation";
+import { formatLongDate, toLocalParts } from "@/lib/client/format/unavailability-format";
+import { getStatusLabel, getTodayLocalDate } from "@/lib/client/format/booking-format";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import BookingStepper, { BookingStep } from "@/components/booking/BookingStepper";
 import BookingCalendar from "@/components/booking/BookingCalendar";
+import PayButton from "@/components/payments/PayButton";
+import { PAYMENT_HOLD_MINUTES } from "@/lib/client/payment-rules";
 
 const NOTES_MAX = 2000;
 
@@ -367,12 +369,13 @@ export default function BookingPanel({ professionalId, initialServiceId }: Booki
 
                 </div>
               <div className="p-6 pt-4">
-                <p className="mb-4 rounded-xl bg-tint p-3 text-sm text-ink">
-                    Votre rendez-vous est enregistré. La confirmation par le professionnel et le
-                    paiement seront ajoutés plus tard.
+                <p className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+                    Votre créneau est réservé pendant {PAYMENT_HOLD_MINUTES / 60} heure. Payez en ligne pour
+                    confirmer le rendez-vous : sans paiement, le créneau est libéré.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-start gap-3">
+                    <PayButton appointmentId={booked.id} label="Payer maintenant" />
                     <Link
                         href="/appointments"
                         className="rounded-full bg-primary px-5 py-2 font-medium text-white transition-all hover:bg-primary-hover active:scale-95"

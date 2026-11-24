@@ -1,7 +1,7 @@
 import { ProfessionalRepository, UpdateProfileData } from "@/repositories/professional.repository";
 import { ServiceRepository } from "@/repositories/service.repository";
-import { NotFoundError, ValidationError } from "@/lib/errors";
-import { normalizeName } from "@/lib/text";
+import { NotFoundError, ValidationError } from "@/lib/server/http/errors";
+import { normalizeName } from "@/lib/server/booking/text";
 
 // Ce que l'on renvoie d'un professionnel (à plat, sans données privées)
 export interface ProfessionalPublic {

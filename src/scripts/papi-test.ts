@@ -1,6 +1,6 @@
 // Crée un lien de paiement de test. Lancer :  npx tsx scripts/papi-test.ts
 // Lit PAPI_API_KEY et APP_PUBLIC_URL dans l'environnement (voir le .env).
-import { PapiGateway } from "../lib/payments/papi-gateway";
+import { PapiGateway } from "../lib/server/payments/papi-gateway";
 
 async function main() {
     const apiKey = process.env.PAPI_API_KEY;

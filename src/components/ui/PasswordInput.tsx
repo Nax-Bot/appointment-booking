@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
-import { getPasswordChecks, getPasswordStrength } from "@/lib/form-validation";
+import { getPasswordChecks, getPasswordStrength } from "@/lib/client/validation/form-validation";
 
 // Champ mot de passe avec icône œil.
 // showStrength = true : affiche la barre de force et la liste des critères

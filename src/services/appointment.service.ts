@@ -3,13 +3,13 @@ import { ProfessionalRepository } from "@/repositories/professional.repository";
 import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/datetime";
-import { Role } from "@/lib/auth";
-import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/slot-grid";
-import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/payment-rules";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/server/http/errors";
+import { toLocalMoment, timeColumnToMinutes, dateColumnToText } from "@/lib/shared/datetime";
+import { Role } from "@/lib/server/auth/auth";
+import { TimeBlock, mergeTimeBlocks, isOnSlotGrid, SLOT_STEP_MINUTES } from "@/lib/server/booking/slot-grid";
+import { UNPAID_HOLD_MINUTES, UNPAID_CANCEL_REASON } from "@/lib/server/payments/payment-rules";
 import type { AppointmentNotifier } from "@/services/appointment-notifier.service";
-import type { TransactionRunner, DbClient } from "@/lib/transaction-runner";
+import type { TransactionRunner, DbClient } from "@/lib/server/db/transaction-runner";
 
 // Données reçues pour réserver
 export interface CreateAppointmentInput {

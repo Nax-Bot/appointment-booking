@@ -14,8 +14,8 @@ import {
     getDayHeader,
     layoutLanes,
     minutesToClock,
-} from "@/lib/lib-front/calendar-utils";
-import { ABSENCE_STRIPES, TONES, isMutedStatus, toneOf } from "@/lib/lib-front/calendar-theme";
+} from "@/lib/client/calendar/calendar-utils";
+import { ABSENCE_STRIPES, TONES, isMutedStatus, toneOf } from "@/lib/client/calendar/calendar-theme";
 import StatusIcon from "@/components/calendar/StatusIcon";
 
 // La grille « heures » des vues Semaine (7 colonnes) et Jour (1 colonne).

@@ -1,5 +1,5 @@
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { getAuthSecret } from "@/lib/server/auth/auth-secret";
 
 // Les réglages de la vérification d'email, rangés au même endroit
 export const CODE_LIFETIME_MINUTES = 10;

@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CalendarOff, CalendarPlus, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { apiDelete, apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiDelete, apiGet, ApiError } from "@/lib/client/api-client";
 import { Availability, Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { getDayName } from "@/lib/lib-front/days";
-import { getTodayLocalDate } from "@/lib/lib-front/booking-format";
-import { dayOfWeekOfDateText, toLocalMoment } from "@/lib/datetime";
+import { getDayName } from "@/lib/client/format/days";
+import { getTodayLocalDate } from "@/lib/client/format/booking-format";
+import { dayOfWeekOfDateText, toLocalMoment } from "@/lib/shared/datetime";
 import {
     AvailabilityGroup,
     describeGroup,
     groupAvailabilities,
-} from "@/lib/lib-front/availability-groups";
-import { describeAbsence } from "@/lib/lib-front/unavailability-format";
+} from "@/lib/client/data/availability-groups";
+import { describeAbsence } from "@/lib/client/format/unavailability-format";
 import {
     CalendarView,
     absencesOnDate,
@@ -26,7 +26,7 @@ import {
     monthKey,
     minutesToClock,
     shiftDate,
-} from "@/lib/lib-front/calendar-utils";
+} from "@/lib/client/calendar/calendar-utils";
 import PageLoading from "@/components/ui/PageLoading";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -36,7 +36,7 @@ import AvailabilityModal, { AvailabilityInitial, SaveResult } from "@/components
 import UnavailabilityModal, { UnavailabilityInitial } from "@/components/unavailability/UnavailabilityModal";
 import NewAppointmentModal from "@/components/calendar/NewAppointmentModal";
 import CancelAppointmentModal from "@/components/appointments/CancelAppointmentModal";
-import { TONES, ToneKey } from "@/lib/lib-front/calendar-theme";
+import { TONES, ToneKey } from "@/lib/client/calendar/calendar-theme";
 import TimeGrid from "@/components/calendar/TimeGrid";
 import DayAgenda from "@/components/calendar/DayAgenda";
 import MonthGrid from "@/components/calendar/MonthGrid";
@@ -658,6 +658,10 @@ export default function ProCalendar() {
                     onCancel={() => {
                         setCancelling(selectedAppointment);
                         setSelectedAppointment(null);
+                    }}
+                    onOutcomeDone={() => {
+                        setSelectedAppointment(null);
+                        reloadAll();
                     }}
                     onClose={() => setSelectedAppointment(null)}
                 />

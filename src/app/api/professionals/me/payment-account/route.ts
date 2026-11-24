@@ -1,4 +1,4 @@
-import { paymentController } from "@/lib/container";
+import { paymentController } from "@/lib/server/container";
 
 export async function GET() {
     return paymentController.getAccountStatus();

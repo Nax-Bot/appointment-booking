@@ -3,16 +3,16 @@
 import { FormEvent, useEffect, useState } from "react";
 import LottieLoader from "@/components/ui/LottieLoader";
 import { ArrowLeft } from "lucide-react";
-import { apiGet, apiPost, apiPut, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, apiPost, apiPut, ApiError } from "@/lib/client/api-client";
 import { CreateServiceInput, Offer, ServiceSuggestion, SetOfferInput } from "@/types/api";
-import { formatDuration, formatPrice } from "@/lib/lib-front/format";
+import { formatDuration, formatPrice } from "@/lib/client/format/format";
 import {
     NAME_MAX,
     getDurationError,
     getNameError,
     getPriceError,
     parseNumber,
-} from "@/lib/lib-front/offer-validation";
+} from "@/lib/client/validation/offer-validation";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";

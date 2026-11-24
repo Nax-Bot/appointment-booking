@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { apiGet } from "@/lib/lib-front/api-client";
+import { apiGet } from "@/lib/client/api-client";
 import { Availability } from "@/types/api";
 import { Slot, SlotsResult } from "@/types/booking";
-import { getTodayLocalDate } from "@/lib/lib-front/booking-format";
-import { minutesToText } from "@/lib/datetime";
+import { getTodayLocalDate } from "@/lib/client/format/booking-format";
+import { minutesToText } from "@/lib/shared/datetime";
 
 const SLOT_STEP_MINUTES = 15; // le backend propose un créneau toutes les 15 minutes
 const WEEK_LABELS = ["L", "M", "M", "J", "V", "S", "D"];

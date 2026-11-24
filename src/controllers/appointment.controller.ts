@@ -1,6 +1,6 @@
 import { BaseController } from "@/controllers/base.controller";
 import { timingSafeEqual } from "crypto";
-import { NotFoundError, UnauthorizedError } from "@/lib/errors";
+import { NotFoundError, UnauthorizedError } from "@/lib/server/http/errors";
 import { AppointmentService } from "@/services/appointment.service";
 import {
     createAppointmentSchema,

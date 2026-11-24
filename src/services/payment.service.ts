@@ -1,13 +1,13 @@
 import type { PaymentAccountRepository } from "@/repositories/payment-account.repository";
 import type { PaymentRepository } from "@/repositories/payment.repository";
 import type { AppointmentRepository } from "@/repositories/appointment.repository";
-import type { TransactionRunner } from "@/lib/transaction-runner";
+import type { TransactionRunner } from "@/lib/server/db/transaction-runner";
 import type { AppointmentNotifier } from "@/services/appointment-notifier.service";
-import type { PaymentGateway } from "@/lib/payments/payment-gateway";
-import { verifyPapiSignature } from "@/lib/payments/papi-signature";
-import { encryptSecret, decryptSecret } from "@/lib/secret-box";
-import { PAYMENT_LINK_HOURS } from "@/lib/payment-rules";
-import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
+import type { PaymentGateway } from "@/lib/server/payments/payment-gateway";
+import { verifyPapiSignature } from "@/lib/server/payments/papi-signature";
+import { encryptSecret, decryptSecret } from "@/lib/server/auth/secret-box";
+import { PAYMENT_LINK_HOURS } from "@/lib/server/payments/payment-rules";
+import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/lib/server/http/errors";
 
 // Montant minimum accepté par Papi (en MGA)
 export const MIN_ONLINE_AMOUNT = 300;

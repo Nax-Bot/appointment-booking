@@ -12,16 +12,16 @@ import { UnavailabilityRepository } from "@/repositories/unavailability.reposito
 import { AppointmentRepository } from "@/repositories/appointment.repository";
 import { PaymentAccountRepository } from "@/repositories/payment-account.repository";
 import { PaymentRepository } from "@/repositories/payment.repository";
-import { PrismaTransactionRunner } from "@/lib/transaction-runner";
-import { PapiGateway } from "@/lib/payments/papi-gateway";
-import { FakePaymentGateway } from "@/lib/payments/fake-gateway";
-import { PaymentGateway } from "@/lib/payments/payment-gateway";
+import { PrismaTransactionRunner } from "@/lib/server/db/transaction-runner";
+import { PapiGateway } from "@/lib/server/payments/papi-gateway";
+import { FakePaymentGateway } from "@/lib/server/payments/fake-gateway";
+import { PaymentGateway } from "@/lib/server/payments/payment-gateway";
 import { PaymentService } from "@/services/payment.service";
 import { PaymentController } from "@/controllers/payment.controller";
 
-import { ConsoleEmailSender, EmailSender } from "@/lib/email-sender";
-import { SmtpEmailSender } from "@/lib/smtp-email-sender";
-import { readSmtpConfig } from "@/lib/smtp-config";
+import { ConsoleEmailSender, EmailSender } from "@/lib/server/email/email-sender";
+import { SmtpEmailSender } from "@/lib/server/email/smtp-email-sender";
+import { readSmtpConfig } from "@/lib/server/email/smtp-config";
 import { RateLimitService } from "@/services/rate-limit.service";
 import { AuthService } from "@/services/auth.service";
 import { ServiceService } from "@/services/service.service";

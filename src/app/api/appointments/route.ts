@@ -1,4 +1,4 @@
-import { appointmentController } from "@/lib/container";
+import { appointmentController } from "@/lib/server/container";
 
 export async function GET(req: Request) {
     return appointmentController.listMine(req);

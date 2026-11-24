@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Banknote, ChevronRight, Clock } from "lucide-react";
 import { ProfessionalSearchItem } from "@/types/booking";
-import { formatDuration, formatPrice } from "@/lib/lib-front/format";
-import { getInitials } from "@/lib/lib-front/text-helpers";
+import { formatDuration, formatPrice } from "@/lib/client/format/format";
+import { getInitials } from "@/lib/client/format/text-helpers";
 
 // Une carte de professionnel, cliquable sur toute sa surface.
 // serviceId = le service filtré dans l'adresse (ou null) : on le transmet à la fiche.

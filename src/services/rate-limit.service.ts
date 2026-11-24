@@ -1,5 +1,5 @@
 import { RateLimitRepository } from "@/repositories/rate-limit.repository";
-import { RateLimitRule } from "@/lib/rate-limit-rules";
+import { RateLimitRule } from "@/lib/server/auth/rate-limit-rules";
 
 // On garde un compteur inactif 24 heures, puis on le supprime
 const KEEP_HOURS = 24;

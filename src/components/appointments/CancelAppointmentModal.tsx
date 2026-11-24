@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { apiPost, ApiError } from "@/lib/lib-front/api-client";
+import { apiPost, ApiError } from "@/lib/client/api-client";
 import { Role } from "@/types/api";
 import { AppointmentDetail, CancelAppointmentInput } from "@/types/booking";
-import { formatLongDate, toLocalParts } from "@/lib/lib-front/unavailability-format";
+import { formatLongDate, toLocalParts } from "@/lib/client/format/unavailability-format";
 import Modal from "@/components/ui/Modal";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
@@ -60,9 +60,9 @@ export default function CancelAppointmentModal({
     }
 
     // Ce que la personne doit savoir avant d'annuler
-    let notice = "Le professionnel ne sera pas prévenu automatiquement : les messages seront ajoutés plus tard.";
+    let notice = "Le professionnel sera prévenu par e-mail.";
     if (role === "PROFESSIONAL") {
-        notice = "Le client ne sera pas prévenu automatiquement : les messages seront ajoutés plus tard.";
+        notice = "Le client sera prévenu par e-mail.";
     }
 
     async function handleConfirm() {

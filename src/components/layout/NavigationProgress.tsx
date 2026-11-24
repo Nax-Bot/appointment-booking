@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "@/context/session-context";
-import { doneProgress, startProgress, subscribeProgress } from "@/lib/lib-front/progress";
+import { doneProgress, startProgress, subscribeProgress } from "@/lib/client/ui/progress";
 
 // La barre de chargement fine en haut de l'écran, comme sur Facebook / YouTube.
 // - Elle démarre dès le CLIC sur un lien interne, avant que la page change.

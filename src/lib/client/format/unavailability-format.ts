@@ -1,4 +1,4 @@
-import { LOCAL_OFFSET_MINUTES, minutesToText, toLocalMoment } from "@/lib/datetime";
+import { LOCAL_OFFSET_MINUTES, minutesToText, toLocalMoment } from "@/lib/shared/datetime";
 import { Unavailability } from "@/types/api";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

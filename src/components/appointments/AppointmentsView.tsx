@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import PageLoading from "@/components/ui/PageLoading";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import { apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiGet, ApiError } from "@/lib/client/api-client";
 import { Role } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -17,7 +17,7 @@ import PageHeader from "@/components/ui/PageHeader";
 // "" = pas de filtre.
 const FILTERS = [
     { value: "", label: "Tous" },
-    { value: "PENDING", label: "En attente" },
+    { value: "PENDING", label: "À payer" },
     { value: "CONFIRMED", label: "Confirmés" },
     { value: "CANCELLED", label: "Annulés" },
     { value: "COMPLETED", label: "Terminés" },
@@ -144,6 +144,12 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
         setReloadCount(reloadCount + 1);
     }
 
+    // Le professionnel a clôturé un rendez-vous (terminé / absent)
+    function handleOutcomeDone() {
+        setSuccessMessage("Rendez-vous mis à jour");
+        setReloadCount(reloadCount + 1);
+    }
+
     // Le backend a refusé : on recharge la liste sans fermer la fenêtre
     function handleStale() {
         setReloadCount(reloadCount + 1);
@@ -151,10 +157,10 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
 
     // Les textes qui changent selon le rôle
     let intro =
-        "Retrouvez les rendez-vous que vous avez réservés. La confirmation par le professionnel et le paiement seront ajoutés plus tard.";
+        "Retrouvez vos rendez-vous. Un rendez-vous réservé est confirmé dès que vous l'avez payé en ligne (dans l'heure, sinon le créneau est libéré).";
     if (role === "PROFESSIONAL") {
         intro =
-            "Retrouvez les rendez-vous pris chez vous. Vous ne pouvez pas encore les confirmer : cette fonction sera ajoutée plus tard.";
+            "Retrouvez les rendez-vous pris chez vous. Ils sont confirmés automatiquement au paiement ; une fois le rendez-vous commencé, marquez-le « Terminé » ou « Client absent ».";
     }
 
     let emptyTitle = "Vous n'avez aucun rendez-vous.";
@@ -309,6 +315,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                                             muted={item.status === "CANCELLED"}
                                             canCancel={canCancel(item)}
                                             onCancel={openCancel}
+                                            onOutcomeDone={handleOutcomeDone}
                                         />
                                     ))}
                                 </ul>
@@ -329,6 +336,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                                             muted={true}
                                             canCancel={false}
                                             onCancel={openCancel}
+                                            onOutcomeDone={handleOutcomeDone}
                                         />
                                     ))}
                                 </ul>

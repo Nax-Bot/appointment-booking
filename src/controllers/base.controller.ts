@@ -5,10 +5,10 @@ import {
     UnauthorizedError,
     ForbiddenError,
     TooManyRequestsError,
-} from "@/lib/errors";
-import { jsonOk, jsonCreated, jsonError } from "@/lib/http";
-import { readSession } from "@/lib/session";
-import { Role, SessionData } from "@/lib/auth";
+} from "@/lib/server/http/errors";
+import { jsonOk, jsonCreated, jsonError } from "@/lib/server/http/http";
+import { readSession } from "@/lib/server/auth/session";
+import { Role, SessionData } from "@/lib/server/auth/auth";
 import { idParamSchema } from "@/validations/common.validation";
 
 export class BaseController {

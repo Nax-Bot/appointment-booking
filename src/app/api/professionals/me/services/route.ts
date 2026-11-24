@@ -1,4 +1,4 @@
-import { offerController } from "@/lib/container";
+import { offerController } from "@/lib/server/container";
 
 export async function GET() {
     return offerController.listMine();

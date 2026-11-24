@@ -3,7 +3,7 @@
 import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/context/session-context";
-import { getHomePath } from "@/lib/navigation";
+import { getHomePath } from "@/lib/client/navigation";
 import { NavLink } from "@/components/layout/Navbar";
 import ClientTopbar from "@/components/layout/ClientTopbar";
 import AppShellSkeleton from "@/components/layout/AppShellSkeleton";

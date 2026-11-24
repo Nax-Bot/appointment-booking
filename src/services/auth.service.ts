@@ -2,8 +2,8 @@ import { createHash } from "crypto";
 import { UserRepository, NewUserData, NewVerificationData } from "@/repositories/user.repository";
 import { EmailVerificationRepository } from "@/repositories/email-verification.repository";
 import { RateLimitService } from "@/services/rate-limit.service";
-import { EmailSender } from "@/lib/email-sender";
-import { hashPassword, verifyPassword, Role } from "@/lib/auth";
+import { EmailSender } from "@/lib/server/email/email-sender";
+import { hashPassword, verifyPassword, Role } from "@/lib/server/auth/auth";
 import {
     generateCode,
     hashCode,
@@ -12,7 +12,7 @@ import {
     MAX_CODE_ATTEMPTS,
     RESEND_DELAY_SECONDS,
     UNVERIFIED_ACCOUNT_LIFETIME_HOURS,
-} from "@/lib/verification-code";
+} from "@/lib/server/auth/verification-code";
 import {
     LOGIN_BY_PAIR_RULE,
     LOGIN_BY_EMAIL_RULE,
@@ -22,7 +22,7 @@ import {
     RESEND_BY_IP_RULE,
     ACCOUNT_NOTICE_RULE,
     RateLimitRule,
-} from "@/lib/rate-limit-rules";
+} from "@/lib/server/auth/rate-limit-rules";
 import {
     ConflictError,
     ForbiddenError,
@@ -30,7 +30,7 @@ import {
     TooManyRequestsError,
     UnauthorizedError,
     ValidationError,
-} from "@/lib/errors";
+} from "@/lib/server/http/errors";
 
 // Pour l'inscription
 export interface RegisterData {

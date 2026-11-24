@@ -2,7 +2,7 @@ import { AvailabilityService, AvailabilityInput } from "../../services/availabil
 import { AvailabilityRepository } from "../../repositories/availability.repository";
 import { ProfessionalRepository } from "../../repositories/professional.repository";
 import { AppointmentRepository } from "../../repositories/appointment.repository";
-import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "../../lib/server/http/errors";
 
 jest.mock("../../repositories/availability.repository", () => ({}));
 jest.mock("../../repositories/professional.repository", () => ({}));

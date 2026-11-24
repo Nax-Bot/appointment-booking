@@ -1,16 +1,16 @@
 "use client";
 
 import { SubmitEvent, useState } from "react";
-import { apiDelete, apiPost, apiPut, ApiError } from "@/lib/lib-front/api-client";
+import { apiDelete, apiPost, apiPut, ApiError } from "@/lib/client/api-client";
 import { Availability, AvailabilityInput } from "@/types/api";
-import { getDayName, getDayOrder } from "@/lib//lib-front/days";
-import { AvailabilityGroup } from "@/lib//lib-front/availability-groups";
+import { getDayName, getDayOrder } from "@/lib/client/format/days";
+import { AvailabilityGroup } from "@/lib/client/data/availability-groups";
 import {
     getDateError,
     getEndTimeError,
     getStartTimeError,
     getValidToError,
-} from "@/lib//lib-front/availability-validation";
+} from "@/lib/client/validation/availability-validation";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";

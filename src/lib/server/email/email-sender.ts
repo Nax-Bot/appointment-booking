@@ -1,4 +1,4 @@
-import type { EmailContent } from "@/lib/email-templates";
+import type { EmailContent } from "@/lib/server/email/email-templates";
 
 // Ce que sait faire un "envoyeur d'emails".
 // Les services ne connaissent que cette interface : on peut changer le vrai service d'envoi

@@ -3,8 +3,8 @@
 import { CalendarCheck2 } from "lucide-react";
 import { Availability, Unavailability } from "@/types/api";
 import { AppointmentDetail } from "@/types/booking";
-import { getStatusLabel } from "@/lib/lib-front/booking-format";
-import { describeAbsence } from "@/lib/lib-front/unavailability-format";
+import { getStatusLabel } from "@/lib/client/format/booking-format";
+import { describeAbsence } from "@/lib/client/format/unavailability-format";
 import {
     absencesOnDate,
     appointmentsOnDate,
@@ -12,8 +12,8 @@ import {
     clientName,
     getShortLongDate,
     minutesToClock,
-} from "@/lib/lib-front/calendar-utils";
-import { TONES, isMutedStatus, toneOf } from "@/lib/lib-front/calendar-theme";
+} from "@/lib/client/calendar/calendar-utils";
+import { TONES, isMutedStatus, toneOf } from "@/lib/client/calendar/calendar-theme";
 import StatusIcon from "@/components/calendar/StatusIcon";
 
 // Le panneau « Agenda du jour » à côté de la vue Jour : un résumé et la chronologie cliquable.

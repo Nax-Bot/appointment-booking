@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import PageLoading from "@/components/ui/PageLoading";
 import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
-import { apiDelete, apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiDelete, apiGet, ApiError } from "@/lib/client/api-client";
 import { Availability } from "@/types/api";
-import { getDayName } from "@/lib/lib-front/days";
-import { formatValidity } from "@/lib/lib-front/format";
+import { getDayName } from "@/lib/client/format/days";
+import { formatValidity } from "@/lib/client/format/format";
 import {
     AvailabilityGroup,
     describeGroup,
     formatDays,
     groupAvailabilities,
-} from "@/lib/lib-front/availability-groups";
+} from "@/lib/client/data/availability-groups";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";

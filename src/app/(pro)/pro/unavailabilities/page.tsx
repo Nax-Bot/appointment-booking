@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import PageLoading from "@/components/ui/PageLoading";
 import { CalendarOff, Pencil, Plus, Trash2 } from "lucide-react";
-import { apiDelete, apiGet, ApiError } from "@/lib/lib-front/api-client";
+import { apiDelete, apiGet, ApiError } from "@/lib/client/api-client";
 import { Unavailability } from "@/types/api";
-import { describeAbsence } from "@/lib/lib-front/unavailability-format";
+import { describeAbsence } from "@/lib/client/format/unavailability-format";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import ErrorMessage from "@/components/ui/ErrorMessage";
