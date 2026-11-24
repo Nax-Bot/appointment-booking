@@ -1,10 +1,10 @@
 import { ProfessionalService } from "@/services/professional.service";
 
-import type { ProfessionalRepository } from "../../repositories/professional.repository";
-import type { ServiceRepository } from "../../repositories/service.repository";
-import { UpdateProfileData } from "../../repositories/professional.repository";
+import type { ProfessionalRepository } from "../../../repositories/professional.repository";
+import type { ServiceRepository } from "../../../repositories/service.repository";
+import { UpdateProfileData } from "../../../repositories/professional.repository";
 
-import { NotFoundError, ValidationError } from "../../lib/errors";
+import { NotFoundError, ValidationError } from "../../../lib/errors";
 import { ProfessionalPublic, ProfessionalOffer, ProfessionalSearchItem } from "@/services/professional.service";
 
 jest.mock("../../repositories/professional.repository", () => ({}));

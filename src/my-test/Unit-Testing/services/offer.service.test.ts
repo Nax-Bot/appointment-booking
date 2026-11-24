@@ -1,10 +1,10 @@
 import { OfferService, SetOfferData } from "@/services/offer.service";
 
-import type { OfferRepository } from "../../repositories/offer.repository";
-import type { ProfessionalRepository } from "../../repositories/professional.repository";
-import type { ServiceRepository } from "../../repositories/service.repository";
+import type { OfferRepository } from "../../../repositories/offer.repository";
+import type { ProfessionalRepository } from "../../../repositories/professional.repository";
+import type { ServiceRepository } from "../../../repositories/service.repository";
 
-import { NotFoundError } from "../../lib/errors";
+import { NotFoundError } from "../../../lib/errors";
 
 jest.mock("../../repositories/offer.repository", () => ({}));
 jest.mock("../../repositories/professional.repository", () => ({}));

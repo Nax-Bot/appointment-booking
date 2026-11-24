@@ -1,10 +1,10 @@
-import { ServiceService, CreateServiceInput, ServiceSuggestion } from "../../services/service.service";
+import { ServiceService, CreateServiceInput, ServiceSuggestion } from "../../../services/service.service";
 
-import type { ServiceRepository } from "../../repositories/service.repository";
-import type { ProfessionalRepository } from "../../repositories/professional.repository";
-import { ConflictError, NotFoundError } from "../../lib/errors";
+import type { ServiceRepository } from "../../../repositories/service.repository";
+import type { ProfessionalRepository } from "../../../repositories/professional.repository";
+import { ConflictError, NotFoundError } from "../../../lib/errors";
 
-import { OfferItem } from "../../services/offer.service";
+import { OfferItem } from "../../../services/offer.service";
 
 // On mock les modules 
 jest.mock("../../repositories/professional.repository", () => ({}));
