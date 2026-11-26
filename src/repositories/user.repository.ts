@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/server/db/prisma";
+import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 
 // Le code de vérification créé en même temps que le compte
@@ -17,6 +17,15 @@ export interface NewUserData {
     phoneNumber: string | null;
     emailVerifiedAt: Date | null;
     verification: NewVerificationData | null;
+}
+
+// Données modifiables du profil d'un utilisateur
+export interface UpdateUserProfileData {
+    firstName?: string;
+    lastName?: string;
+    nameChangedAt?: Date;
+    phoneNumber?: string | null;
+    client?: { birthDate?: Date | null; address?: string | null };
 }
 
 export class UserRepository {
@@ -102,6 +111,50 @@ export class UserRepository {
             data: {
                 emailVerifiedAt: verifiedAt,
                 emailVerification: { delete: true },
+            },
+            include: { client: true, professional: true },
+        });
+    }
+
+    // Change le mot de passe ET supprime le code de réinitialisation, en une seule opération
+    async resetPassword(userId: number, passwordHash: string, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.update({
+            where: { userId: userId },
+            data: { passwordHash: passwordHash, passwordReset: { delete: true } },
+        });
+    }
+
+    // Change seulement le mot de passe (l'utilisateur connaît l'actuel)
+    async updatePassword(userId: number, passwordHash: string, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.update({ where: { userId: userId }, data: { passwordHash: passwordHash } });
+    }
+
+    // Modifie le profil (undefined = ne pas toucher, null = effacer).
+    // Les champs "client" ne servent que pour un utilisateur qui a une fiche client.
+    async updateProfile(userId: number, data: UpdateUserProfileData, db?: Prisma.TransactionClient) {
+        let client: Prisma.TransactionClient = prisma;
+        if (db) {
+            client = db;
+        }
+
+        return client.user.update({
+            where: { userId: userId },
+            data: {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                nameChangedAt: data.nameChangedAt,
+                phoneNumber: data.phoneNumber,
+                client: data.client ? { update: data.client } : undefined,
             },
             include: { client: true, professional: true },
         });

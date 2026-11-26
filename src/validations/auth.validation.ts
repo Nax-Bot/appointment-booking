@@ -24,6 +24,17 @@ function fitsInBcrypt(text: string): boolean {
     return bytes <= PASSWORD_MAX_BYTES;
 }
 
+// Règle du mot de passe : 8 caractères minimum, avec une majuscule, une minuscule et un chiffre.
+// bcrypt ne lit que les 72 premiers OCTETS (pas caractères) : un "é" ou un emoji prend plusieurs octets.
+// Réutilisée pour l'inscription, la réinitialisation et le changement de mot de passe.
+export const passwordSchema = z
+    .string()
+    .min(PASSWORD_MIN_LENGTH, "Le mot de passe doit contenir au moins " + PASSWORD_MIN_LENGTH + " caractères")
+    .refine(hasUppercase, "Le mot de passe doit contenir au moins une majuscule")
+    .refine(hasLowercase, "Le mot de passe doit contenir au moins une minuscule")
+    .refine(hasDigit, "Le mot de passe doit contenir au moins un chiffre")
+    .refine(fitsInBcrypt, "Le mot de passe est trop long (" + PASSWORD_MAX_BYTES + " octets maximum)");
+
 // Données attendues pour créer un compte
 export const registerSchema = z.object({
     // Le rôle choisi à l'inscription
@@ -47,15 +58,8 @@ export const registerSchema = z.object({
         .toLowerCase()
         .max(255, "L'email est trop long")
         .email("L'email n'est pas valide"),
-    // Règle du mot de passe : 8 caractères minimum, avec une majuscule, une minuscule et un chiffre.
-    // bcrypt ne lit que les 72 premiers OCTETS (pas caractères) : un "é" ou un emoji prend plusieurs octets.
-    password: z
-        .string()
-        .min(PASSWORD_MIN_LENGTH, "Le mot de passe doit contenir au moins " + PASSWORD_MIN_LENGTH + " caractères")
-        .refine(hasUppercase, "Le mot de passe doit contenir au moins une majuscule")
-        .refine(hasLowercase, "Le mot de passe doit contenir au moins une minuscule")
-        .refine(hasDigit, "Le mot de passe doit contenir au moins un chiffre")
-        .refine(fitsInBcrypt, "Le mot de passe est trop long (" + PASSWORD_MAX_BYTES + " octets maximum)"),
+    // Règle du mot de passe : voir passwordSchema
+    password: passwordSchema,
     phoneNumber: z
         .string()
         .trim()

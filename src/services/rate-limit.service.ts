@@ -1,6 +1,7 @@
 import { RateLimitRepository } from "@/repositories/rate-limit.repository";
 import { RateLimitRule } from "@/lib/server/auth/rate-limit-rules";
 
+/// LIMITE DE REQUETE
 // On garde un compteur inactif 24 heures, puis on le supprime
 const KEEP_HOURS = 24;
 
@@ -11,7 +12,8 @@ export class RateLimitService {
         this.rateLimitRepository = rateLimitRepository;
     }
 
-    // Combien de secondes faut-il encore attendre pour cette clé ? 0 si elle n'est pas bloquée.
+    // Combien de secondes faut-il encore attendre pour cette clé ?
+    // 0 si elle n'est pas bloquée.
     async getRetryAfterSeconds(limitKey: string): Promise<number> {
         const row = await this.rateLimitRepository.findByKey(limitKey);
 

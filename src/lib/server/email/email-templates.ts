@@ -185,3 +185,32 @@ export function buildAppointmentCancelledEmail(
 
     return { subject: subject, text: [...lines, "", APP_NAME].join("\n"), html: wrapHtml("Rendez-vous annulé", lines) };
 }
+
+// Email du code de réinitialisation du mot de passe
+export function buildPasswordResetEmail(code: string, lifetimeMinutes: number): EmailContent {
+    if (/^[0-9]{6}$/.test(code) === false) {
+        throw new Error("Le code de réinitialisation doit contenir 6 chiffres");
+    }
+
+    const subject = code + " est votre code de réinitialisation - " + APP_NAME;
+    const lines = [
+        "Bonjour,",
+        "Voici votre code pour réinitialiser votre mot de passe : " + code,
+        "Il est valable " + lifetimeMinutes + " minutes.",
+        "Si vous n'avez pas fait cette demande, ignorez ce message : votre mot de passe n'a pas été modifié.",
+        "Ne partagez jamais ce code.",
+    ];
+    return { subject: subject, text: [...lines, "", APP_NAME].join("\n"), html: wrapHtml("Réinitialiser votre mot de passe", lines) };
+}
+
+// Email envoyé APRÈS un changement de mot de passe : permet de réagir vite si ce n'était pas la bonne personne
+export function buildPasswordChangedEmail(): EmailContent {
+    const subject = "Votre mot de passe a été modifié - " + APP_NAME;
+    const lines = [
+        "Bonjour,",
+        "Le mot de passe de votre compte vient d'être modifié.",
+        "Si c'est bien vous, vous n'avez rien à faire.",
+        "Si ce n'est pas vous, utilisez tout de suite « mot de passe oublié » pour reprendre la main sur votre compte.",
+    ];
+    return { subject: subject, text: [...lines, "", APP_NAME].join("\n"), html: wrapHtml("Mot de passe modifié", lines) };
+}
