@@ -258,9 +258,14 @@ model Unavailability {
 // Les compteurs de la limitation de tentatives (connexion, et plus tard d'autres routes)
 // C'EST LA TABLE QUI ENREGISTRE LES TENTATIVES DE CONNEXION ET INCREMENT LES COMPTEURS
 model RateLimit {
+  // Clé de limite [identifiant pour la session d'une tentative]
   limitKey     String    @id @map("limit_key") @db.VarChar(320)
+  // Le comptage
   count        Int       @default(0)
+  // L'heure de mon premier echec
   windowStart  DateTime  @map("window_start")
+
+  // L'heure de blockage 
   blockedUntil DateTime? @map("blocked_until")
 
   @@index([windowStart])

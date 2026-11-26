@@ -12,20 +12,23 @@ export class RateLimitService {
         this.rateLimitRepository = rateLimitRepository;
     }
 
+    
     // Combien de secondes faut-il encore attendre pour cette clé ?
     // 0 si elle n'est pas bloquée.
     async getRetryAfterSeconds(limitKey: string): Promise<number> {
         const row = await this.rateLimitRepository.findByKey(limitKey);
 
+        // SI AUCUN BLOCAGE => 0
         if (!row || row.blockedUntil === null) {
             return 0;
         }
-
+        // LORSQUE LE TEMPS IMPARTIE EST
         const remainingMs = row.blockedUntil.getTime() - Date.now();
         if (remainingMs <= 0) {
             return 0;
         }
 
+        // Arrondissement mais on prend le plus petite valeur possible
         return Math.ceil(remainingMs / 1000);
     }
 
@@ -34,7 +37,7 @@ export class RateLimitService {
         const nowMs = Date.now();
         const now = new Date(nowMs);
 
-        // Si la fenêtre est finie, ou si le blocage est terminé, on repart de zéro
+        // Si la fenêtre est finie OU si le blocage est terminé, on repart de zéro
         const existing = await this.rateLimitRepository.findByKey(limitKey);
         if (existing) {
             const windowEnded = nowMs - existing.windowStart.getTime() > rule.windowSeconds * 1000;

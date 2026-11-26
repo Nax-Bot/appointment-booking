@@ -1,7 +1,7 @@
 "use client";
 
 import { SubmitEvent, useEffect, useState } from "react";
-import { CreditCard, ShieldCheck } from "lucide-react";
+import { Check, CreditCard, ShieldCheck } from "lucide-react";
 import { apiGet, apiPut, ApiError } from "@/lib/client/api-client";
 import { PaymentAccountResult, PaymentAccountStatus, SetupPaymentAccountInput } from "@/types/payment";
 import { WEBHOOK_SECRET_PATTERN } from "@/lib/client/payment-rules";
@@ -122,54 +122,93 @@ export default function PaymentAccountSection() {
 
     const configured = status !== null && status.configured;
 
+    // Les moyens de paiement proposés par Papi (texte simple, pas de logos de marques)
+    const methods = ["MVola", "Airtel Money", "Orange Money", "Carte bancaire"];
+    const benefits = [
+        "Rendez-vous confirmé dès le paiement",
+        "MVola, Airtel Money, Orange Money, carte",
+        "Créneau libéré si non payé en 1 heure",
+        "Vos clés sont chiffrées, jamais affichées",
+    ];
+
     return (
-        <section className="mt-6 rounded-2xl border border-line bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-start justify-between gap-4 border-b border-line pb-3">
-                <div>
-                    <h2 className="text-lg font-semibold text-primary">Paiement en ligne</h2>
-                    <p className="text-sm text-muted">
-                        Vos clients paient leur rendez-vous avec Papi (MVola, Airtel Money, Orange Money, carte). Le
-                        rendez-vous est confirmé dès que le paiement arrive.
-                    </p>
+        <div className="flex flex-col gap-6">
+            {/* Carte claire : l'état de la boutique et les moyens de paiement */}
+            <section className="rounded-2xl border border-line bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold text-ink">Informations de paiement</h2>
+                    {status !== null && (
+                        <span
+                            className={
+                                "rounded-full px-2.5 py-0.5 text-xs font-medium " +
+                                (configured ? "bg-tint text-primary" : "bg-amber-50 text-amber-800")
+                            }
+                        >
+                            {configured ? "Activé" : "Non configuré"}
+                        </span>
+                    )}
                 </div>
+
+                <SuccessMessage message={successMessage} />
+                <ErrorMessage message={loadError} />
+
+                {status === null && loadError === "" && <Skeleton className="h-11 w-full" />}
+
+                {status !== null && (
+                    <>
+                        <p className="mb-1.5 text-sm text-muted">Boutique Papi</p>
+                        <div className="flex items-center justify-between gap-3 rounded-xl bg-page px-4 py-3">
+                            <span className="truncate font-mono text-sm tracking-wide text-ink">
+                                {configured ? "•••• •••• " + status.boutiqueCode : "Aucune boutique enregistrée"}
+                            </span>
+                            <ShieldCheck className={"h-5 w-5 shrink-0 " + (configured ? "text-primary" : "text-muted/50")} />
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-2.5">
+                            {methods.map((method) => (
+                                <div
+                                    key={method}
+                                    className="flex items-center justify-center gap-2 rounded-xl border border-line bg-white px-3 py-3 text-sm font-semibold text-ink/80"
+                                >
+                                    {method === "Carte bancaire" && <CreditCard className="h-4 w-4 text-muted" />}
+                                    {method}
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </section>
+
+            {/* Carte foncée : ce que ça apporte, et le bouton pour configurer */}
+            <section className="rounded-2xl bg-deep p-6 text-white shadow-sm">
+                <h2 className="text-xl leading-tight font-semibold">
+                    Paiement
+                    <br />
+                    en ligne
+                </h2>
+                <ul className="mt-4 space-y-2.5">
+                    {benefits.map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-2.5 text-sm text-white/85">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-mint" strokeWidth={3} />
+                            {benefit}
+                        </li>
+                    ))}
+                </ul>
                 {status !== null && (
                     <button
                         type="button"
                         onClick={openModal}
-                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm text-ink hover:bg-tint"
+                        className="mt-6 w-full rounded-xl bg-mint px-4 py-3 text-sm font-semibold text-deep shadow-lg shadow-black/20 transition-all hover:brightness-105 active:scale-[0.98]"
                     >
-                        <CreditCard className="h-4 w-4" />
-                        {configured ? "Remplacer" : "Configurer"}
+                        {configured ? "Remplacer ma boutique" : "Configurer ma boutique"}
                     </button>
                 )}
-            </div>
-
-            <SuccessMessage message={successMessage} />
-            <ErrorMessage message={loadError} />
-
-            {status === null && loadError === "" && <Skeleton className="h-12 w-full" />}
-
-            {status !== null && configured && (
-                <div className="flex items-center gap-3 rounded-xl bg-tint p-4">
-                    <ShieldCheck className="h-6 w-6 shrink-0 text-primary" />
-                    <div>
-                        <p className="font-medium text-ink">Paiement en ligne activé</p>
-                        <p className="text-sm text-muted">
-                            Boutique : <span className="font-medium text-ink">{status.boutiqueCode}</span>
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {status !== null && configured === false && (
-                <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-medium">Paiement en ligne non configuré</p>
-                    <p className="mt-0.5">
-                        Tant que votre boutique n&apos;est pas enregistrée, vos clients ne peuvent pas payer, et leurs
-                        réservations restent en attente puis sont libérées au bout d&apos;une heure.
+                {status !== null && configured === false && (
+                    <p className="mt-3 text-xs text-white/60">
+                        Sans boutique, les réservations de vos clients sont libérées au bout d&apos;une heure.
                     </p>
-                </div>
-            )}
+                )}
+            </section>
 
             <Modal open={modalOpen} title={configured ? "Remplacer ma boutique" : "Configurer ma boutique"} onClose={closeModal}>
                 <form onSubmit={handleSubmit}>
@@ -219,6 +258,6 @@ export default function PaymentAccountSection() {
                     </div>
                 </form>
             </Modal>
-        </section>
+        </div>
     );
 }

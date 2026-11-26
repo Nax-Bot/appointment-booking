@@ -117,7 +117,6 @@ interface UserWithProfiles {
 
 let mockUserRepo: mockUserRepository;
 let mockEmailVerificationRepo: mockEmailVerificationRepository;
-let mockRateLimitServ: mockRateLimitService;
 
 let emailSender: EmailSender;
 emailSender = new SmtpEmailSender(readSmtpConfig(process.env));
@@ -127,7 +126,7 @@ let requireEmailVerification = true;
 let authService: AuthService;
 
 /**
- * 
+ * FAUX DEPOTS DE COMPTEURS EN MEMOIRE
  * @returns {object} { findBykey, incrementFailures, restartWindow, setBlockWindow, deleteByKey, deleteExpired }
  */
 function makeInMemoryRateLimitRepository() {

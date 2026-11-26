@@ -9,6 +9,7 @@ import Navbar, { NavGroup } from "@/components/layout/Navbar";
 import { apiGet } from "@/lib/client/api-client";
 import { AppointmentDetail } from "@/types/booking";
 import AppShellSkeleton from "@/components/layout/AppShellSkeleton";
+import ProTopbar from "@/components/layout/ProTopbar";
 import PageTransition from "@/components/layout/PageTransition";
 
 // Les sections de la barre de navigation du professionnel.
@@ -94,11 +95,15 @@ export default function ProLayout({ children }: { children: ReactNode }) {
     return (
         // La barre de navigation est une colonne à gauche (en haut sur petit écran)
         <div data-role="PROFESSIONAL" className="flex min-h-screen flex-col lg:flex-row">
-            <main className="min-w-0 flex-1 p-6">
-                <div className="mx-auto max-w-6xl">
-                    <PageTransition>{children}</PageTransition>
-                </div>
-            </main>
+            {/* À droite de la barre : le bandeau du haut, puis la page */}
+            <div className="flex min-w-0 flex-1 flex-col">
+                <ProTopbar pendingCount={pendingCount} />
+                <main className="min-w-0 flex-1 p-6">
+                    <div className="mx-auto max-w-6xl">
+                        <PageTransition>{children}</PageTransition>
+                    </div>
+                </main>
+            </div>
             <Navbar groups={buildProGroups(pendingCount)} />
         </div>
     );
