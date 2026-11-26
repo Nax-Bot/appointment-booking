@@ -13,6 +13,7 @@ interface SessionContextValue {
     register: (data: RegisterInput) => Promise<RegisterResult>; // renvoie user = null tant que l'e-mail n'est pas vérifié
     verifyEmail: (email: string, code: string) => Promise<AuthUser>; // vérifie le code reçu par e-mail puis ouvre la session
     resendCode: (email: string) => Promise<void>; // demande un nouveau code
+    updateUser: (changes: Partial<AuthUser>) => void; // met à jour l'utilisateur affiché (après une modification du profil)
     logout: () => Promise<void>; // logout a pour type une fonction qui ne renvoie rien
 }
 
@@ -101,6 +102,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await apiPost("/api/auth/resend-code", { email });
     }
 
+    function updateUser(changes: Partial<AuthUser>) {
+        setUser((current) => (current === null ? current : { ...current, ...changes }));
+    }
+
     async function logout(): Promise<void> {
         await apiPost("/api/auth/logout", {});
         setUser(null);
@@ -113,6 +118,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         register: register,
         verifyEmail: verifyEmail,
         resendCode: resendCode,
+        updateUser: updateUser,
         logout: logout
     };
 

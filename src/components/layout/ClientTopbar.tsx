@@ -67,12 +67,14 @@ export default function ClientTopbar({ links }: { links: NavLink[] }) {
 
                 {user !== null && (
                     <div className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-white py-1 pr-1 pl-1 shadow-sm sm:pl-1.5">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-xs font-bold text-white">
-                            {getInitials(user.firstName, user.lastName)}
-                        </span>
-                        <span className="hidden max-w-32 truncate text-sm font-medium text-ink md:block">
-                            {user.firstName}
-                        </span>
+                        <Link href="/account" title="Mon compte" className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-xs font-bold text-white">
+                                {getInitials(user.firstName, user.lastName)}
+                            </span>
+                            <span className="hidden max-w-32 truncate text-sm font-medium text-ink md:block">
+                                {user.firstName}
+                            </span>
+                        </Link>
                         <button
                             type="button"
                             onClick={handleLogout}

@@ -13,6 +13,7 @@ interface InputProps {
     type?: string;
     placeholder?: string;
     maxLength?: number;
+    disabled?: boolean; // champ grisé (non modifiable)
 }
 
 export default function Input({
@@ -24,6 +25,7 @@ export default function Input({
     type = "text",
     placeholder = "",
     maxLength,
+    disabled = false,
 }: InputProps) {
     // Les dates ont leur propre champ (saisie « 23/12/2026 » + calendrier)
     if (type === "date") {
@@ -53,8 +55,9 @@ export default function Input({
                 placeholder={placeholder}
                 onChange={(event) => onChange(event.target.value)}
                 onBlur={onBlur}
+                disabled={disabled}
                 className={
-                    "block w-full rounded-lg border bg-white px-3 py-2.5 text-ink transition-shadow duration-200 placeholder:text-muted/45 focus:ring-2 focus:outline-none " +
+                    "block w-full rounded-lg border bg-white px-3 py-2.5 text-ink disabled:cursor-not-allowed disabled:bg-page disabled:text-muted transition-shadow duration-200 placeholder:text-muted/45 focus:ring-2 focus:outline-none " +
                     fieldClass
                 }
             />

@@ -1,4 +1,4 @@
-import { accountController } from "@/lib/container";
+import { accountController } from "@/lib/server/container";
 
 export async function PATCH(req: Request) {
     return accountController.updateProfile(req);

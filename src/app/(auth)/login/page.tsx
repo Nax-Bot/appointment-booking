@@ -1,14 +1,15 @@
 "use client";
 
-import { SubmitEvent, useEffect, useState } from "react";
+import { Suspense, SubmitEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/context/session-context";
 import { ApiError } from "@/lib/client/api-client";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import SuccessMessage from "@/components/ui/SuccessMessage";
 import AuthHeading from "@/components/auth/AuthHeading";
 
 // Un blocage de connexion (réponse 429 du serveur) : pour quel email, jusqu'à quand (ms), et pour combien de secondes au départ.
@@ -69,6 +70,17 @@ function formatCountdown(totalSeconds: number): string {
 }
 
 export default function LoginPage() {
+    // useSearchParams doit être dans un composant sous <Suspense>
+    return (
+        <Suspense fallback={null}>
+            <LoginForm />
+        </Suspense>
+    );
+}
+
+function LoginForm() {
+    // On arrive après un « mot de passe oublié » réussi : petit message de confirmation
+    const resetDone = useSearchParams().get("reset") === "1";
     const { login } = useSession();
     const router = useRouter();
 
@@ -171,6 +183,8 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
             <AuthHeading title="Content de vous revoir">Connectez-vous pour retrouver vos rendez-vous.</AuthHeading>
 
+            <SuccessMessage message={resetDone ? "Mot de passe modifié. Vous pouvez vous connecter." : ""} />
+
             {isLocked ? (
                 <ErrorMessage
                     tone="warning"
@@ -183,6 +197,11 @@ export default function LoginPage() {
 
             <Input label="Email" type="email" placeholder="Ex. rakoto@gmail.com" value={email} onChange={setEmail} />
             <PasswordInput label="Mot de passe" value={password} onChange={setPassword} />
+            <p className="-mt-2 mb-4 text-right text-sm">
+                <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+                    Mot de passe oublié ?
+                </Link>
+            </p>
 
             <Button type="submit" loading={submitting} disabled={isLocked}>
                 {isLocked ? "Réessayez dans " + formatCountdown(remainingSeconds) : submitting ? "Connexion..." : "Se connecter"}

@@ -1,6 +1,6 @@
 import { AccountService } from "../../services/account.service";
-import { hashCode } from "../../lib/verification-code";
-import { ConflictError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/errors";
+import { hashCode } from "../../lib/server/auth/verification-code";
+import { ConflictError, TooManyRequestsError, UnauthorizedError, ValidationError } from "../../lib/server/http/errors";
 
 process.env.AUTH_SECRET = "x".repeat(40);
 
@@ -8,7 +8,7 @@ jest.mock("../../repositories/user.repository", () => ({}));
 jest.mock("../../repositories/password-reset.repository", () => ({}));
 jest.mock("../../services/rate-limit.service", () => ({}));
 // Faux bcrypt : rapide et prévisible
-jest.mock("../../lib/auth", () => ({
+jest.mock("../../lib/server/auth/auth", () => ({
     hashPassword: async (p: string) => "hash:" + p,
     verifyPassword: async (p: string, h: string) => h === "hash:" + p,
 }));

@@ -14,6 +14,8 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import SuccessMessage from "@/components/ui/SuccessMessage";
 import PageHeader from "@/components/ui/PageHeader";
 import PaymentAccountSection from "@/components/payments/PaymentAccountSection";
+import PersonalInfoSection from "@/components/account/PersonalInfoSection";
+import ChangePasswordSection from "@/components/account/ChangePasswordSection";
 
 // Mêmes limites que le backend
 const SPECIALTY_MAX = 150;
@@ -283,6 +285,10 @@ export default function ProProfilePage() {
 
             {/* Paiement en ligne (boutique Papi) */}
             <PaymentAccountSection />
+
+            {/* Mes informations de compte et mot de passe */}
+            <PersonalInfoSection />
+            <ChangePasswordSection />
 
             {/* La fenêtre de modification */}
             <Modal open={modalOpen} title="Modifier ma présentation" onClose={closeModal}>
