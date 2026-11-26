@@ -12,6 +12,8 @@ const PUBLIC_PATHS = [
     "/api/auth/logout",
     "/api/auth/verify-email",
     "/api/auth/resend-code",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password",
 ];
 
 // Avec Next.js 15 ou moins : renomme cette fonction "middleware" (et le fichier middleware.ts)

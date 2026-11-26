@@ -10,6 +10,9 @@ import { OfferRepository } from "@/repositories/offer.repository";
 import { AvailabilityRepository } from "@/repositories/availability.repository";
 import { UnavailabilityRepository } from "@/repositories/unavailability.repository";
 import { AppointmentRepository } from "@/repositories/appointment.repository";
+import { PasswordResetRepository } from "@/repositories/password-reset.repository";
+import { AccountService } from "@/services/account.service";
+import { AccountController } from "@/controllers/account.controller";
 import { PaymentAccountRepository } from "@/repositories/payment-account.repository";
 import { PaymentRepository } from "@/repositories/payment.repository";
 import { PrismaTransactionRunner } from "@/lib/server/db/transaction-runner";
@@ -69,6 +72,7 @@ const availabilityRepository = new AvailabilityRepository();
 const unavailabilityRepository = new UnavailabilityRepository();
 const appointmentRepository = new AppointmentRepository();
 
+const passwordResetRepository = new PasswordResetRepository();
 const paymentAccountRepository = new PaymentAccountRepository();
 const paymentRepository = new PaymentRepository();
 
@@ -84,6 +88,7 @@ const authService = new AuthService(
     requireEmailVerification,
     rateLimitService
 );
+const accountService = new AccountService(userRepository, passwordResetRepository, rateLimitService, emailSender);
 const serviceService = new ServiceService(serviceRepository, professionalRepository);
 const professionalService = new ProfessionalService(professionalRepository, serviceRepository);
 const offerService = new OfferService(offerRepository, professionalRepository, serviceRepository);
@@ -137,3 +142,4 @@ export const unavailabilityController = new UnavailabilityController(unavailabil
 export const appointmentController = new AppointmentController(appointmentService);
 export const slotController = new SlotController(slotService);
 export const paymentController = new PaymentController(paymentService);
+export const accountController = new AccountController(accountService);

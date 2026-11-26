@@ -56,3 +56,34 @@ export const ACCOUNT_NOTICE_RULE: RateLimitRule = {
     windowSeconds: 60 * 60,
     blockSeconds: 60 * 60,
 };
+
+// Mot de passe oublié : 10 demandes en 15 minutes par adresse IP, puis blocage de 15 minutes
+export const FORGOT_BY_IP_RULE: RateLimitRule = {
+    maxFailures: 10,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};
+
+// Mot de passe oublié : au plus 3 emails par heure pour une même adresse email
+// (empêche d'inonder la boîte de quelqu'un en demandant des codes sans arrêt)
+export const FORGOT_BY_EMAIL_RULE: RateLimitRule = {
+    maxFailures: 3,
+    windowSeconds: 60 * 60,
+    blockSeconds: 60 * 60,
+};
+
+// Réinitialisation : 30 essais en 15 minutes par adresse IP, puis blocage de 15 minutes
+// (les essais par code sont déjà limités à 5 dans le service)
+export const RESET_BY_IP_RULE: RateLimitRule = {
+    maxFailures: 30,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};
+
+// Changement de mot de passe : 5 mauvais "mot de passe actuel" en 15 minutes par utilisateur, puis blocage de 15 minutes
+// (protège contre quelqu'un qui aurait volé une session ouverte et chercherait le mot de passe)
+export const CHANGE_PASSWORD_RULE: RateLimitRule = {
+    maxFailures: 5,
+    windowSeconds: 15 * 60,
+    blockSeconds: 15 * 60,
+};

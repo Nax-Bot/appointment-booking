@@ -113,14 +113,17 @@ export class AuthService {
 
         const now = new Date();
 
+        /// ETAPE 1 : SUPPRESSION DES COMPTES JAMAIS VERIFIES DEPUIS TROP LONGTEMPS 
         // Nettoyage au passage : on supprime les comptes jamais vérifiés depuis trop longtemps
         const limit = new Date(now.getTime() - UNVERIFIED_ACCOUNT_LIFETIME_HOURS * 60 * 60 * 1000);
         await this.userRepository.deleteUnverifiedCreatedBefore(limit);
 
+        /// ETAPE 2 : HACHAGE DU MOT DE PASSE 
         // Le hachage du mot de passe (lent) est fait AVANT de regarder si l'email existe :
         // ainsi la réponse prend le même temps, que l'email soit déjà utilisé ou non.
         const passwordHash = await hashPassword(data.password);
 
+        /// ETAPE 3 : VERIFIE SI L'EMAIL EST DEJA UTILISE DANS UNE AUTRE COMPTE
         // Email -> un seul compte
         const existingUser = await this.userRepository.findByEmail(data.email);
 
@@ -153,11 +156,13 @@ export class AuthService {
             await this.userRepository.deleteById(existingUser.userId);
         }
 
+        /// ETAPE 4 : METTRE NULL SI L'UTILISATEUR N'A PAS INTRODUIT SON NUMERO DE TELEPHONE
         let phoneNumber: string | null = null;
         if (data.phoneNumber) {
             phoneNumber = data.phoneNumber;
         }
 
+        /// ETAPE 5 : 
         // Selon le réglage : un compte à vérifier avec un code, ou un compte déjà vérifié
         let emailVerifiedAt: Date | null = null;
         let verification: NewVerificationData | null = null;
@@ -174,6 +179,7 @@ export class AuthService {
             emailVerifiedAt = now;
         }
 
+        /// ETAPE 6 : PREPARATON DES DONNÉES A ENVOYER AUX BASES DE DONNÉES
         const newUserData: NewUserData = {
             lastName: data.lastName,
             firstName: data.firstName,
@@ -184,12 +190,17 @@ export class AuthService {
             verification: verification,
         };
 
+        /// ETAPE 7 : ENVOYE DU DES DONNÉES AUX BASE DE DONNÉES PAR LE BIAIS DU REPOSITORY
         let createdUser: UserWithProfiles;
         try {
             if (data.role === "CLIENT") {
                 createdUser = await this.userRepository.createClientUser(newUserData);
+                /// Verification du retour
+                console.log(createdUser);
             } else {
                 createdUser = await this.userRepository.createProfessionalUser(newUserData);
+                /// Verification du retour
+                console.log(createdUser);
             }
         } catch (error) {
             // Cas rare : deux inscriptions avec le même email au même instant
@@ -199,6 +210,7 @@ export class AuthService {
             throw error;
         }
 
+        /// ETAPE 8 : SI LE VERIFICATION D'EMAIL EST APPLIQUER
         if (this.requireEmailVerification) {
             try {
                 await this.emailSender.sendVerificationCode(data.email, code);
@@ -211,8 +223,18 @@ export class AuthService {
                 throw new ServiceUnavailableError("Impossible d'envoyer l'email de vérification. Réessayez dans un instant.");
             }
 
+            /// Verification du retour
+            console.log({ email: data.email, verificationRequired: true, user: null });
             return { email: data.email, verificationRequired: true, user: null };
         }
+
+        const result = {
+            email: data.email,
+            verificationRequired: false,
+            user: this.toAuthUser(createdUser)
+        }
+        // Check du retour de la fonction
+        console.log("Verification: " + result);
 
         return { email: data.email, verificationRequired: false, user: this.toAuthUser(createdUser) };
     }
