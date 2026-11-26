@@ -45,6 +45,8 @@ model User {
   passwordHash    String    @map("password_hash") @db.VarChar(255)
   phoneNumber     String?   @map("phone_number") @db.VarChar(30)
   emailVerifiedAt DateTime? @map("email_verified_at")
+  // Dernière modification du nom ou du prénom (limitée à une fois tous les 30 jours)
+  nameChangedAt   DateTime? @map("name_changed_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -52,6 +54,7 @@ model User {
   client            Client?
   professional      Professional?
   emailVerification EmailVerification?
+  passwordReset     PasswordReset?
 
   @@map("users")
 }
@@ -68,6 +71,19 @@ model EmailVerification {
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("email_verifications")
+}
+
+// TABLE DU CODE DE RÉINITIALISATION DE MOT DE PASSE : le code en cours d'un utilisateur (au plus un à la fois)
+model PasswordReset {
+  userId     Int      @id @map("user_id")
+  codeHash   String   @map("code_hash") @db.VarChar(64)
+  expiresAt  DateTime @map("expires_at")
+  attempts   Int      @default(0)
+  lastSentAt DateTime @map("last_sent_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("password_resets")
 }
 
 // TABLE D'UTILISATEUR CLIENT : HERITE DE USER
