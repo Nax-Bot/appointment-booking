@@ -2,7 +2,7 @@ import { ServiceService, CreateServiceInput, ServiceSuggestion } from "../../../
 
 import type { ServiceRepository } from "../../../repositories/service.repository";
 import type { ProfessionalRepository } from "../../../repositories/professional.repository";
-import { ConflictError, NotFoundError } from "../../../lib/errors";
+import { ConflictError, NotFoundError } from "../../../lib/server/http/errors";
 
 import { OfferItem } from "../../../services/offer.service";
 
