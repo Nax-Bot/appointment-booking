@@ -8,12 +8,12 @@
   --color-muted: #64748b;
   --color-primary: #15803d;
   --color-primary-hover: #166534;
-  /* Palette : Deep Emerald, Mint Accent (utilisables en bg-deep, text-mint...) */
+  /* Palette : Deep Emerald, Mint Accent (utilisables en bg-deep, text-mint...) (utilisables en bg-deep, text-mint...) */
   --color-deep: #064e3b;
   --color-mint: #34d399;
-  /* Couleur d'accent (violet doux) : touches de couleur, à utiliser avec parcimonie (bg-accent, bg-accent-soft, text-accent) */
-  --color-accent: #7c6bd6;
-  --color-accent-soft: #efecfb;
+  /* Couleur d'accent (bleu sombre) : touches de couleur, à utiliser avec parcimonie (bg-accent, bg-accent-soft, text-accent) */
+  --color-accent: #1e3a8a;
+  --color-accent-soft: #e7edf9;
 
   /* Un style plus sobre : coins peu arrondis, ombres presque invisibles (la bordure fait le travail) */
   --radius-md: 0.3125rem;
@@ -125,8 +125,8 @@ body {
   overflow: hidden;
   background:
     radial-gradient(60% 45% at 15% 100%, rgb(52 211 153 / 0.45), transparent 70%),
-    radial-gradient(50% 40% at 90% 40%, rgb(124 107 214 / 0.38), transparent 70%),
-    radial-gradient(45% 35% at 10% 0%, rgb(124 107 214 / 0.18), transparent 70%),
+    radial-gradient(50% 40% at 90% 40%, rgb(30 58 138 / 0.38), transparent 70%),
+    radial-gradient(45% 35% at 10% 0%, rgb(30 58 138 / 0.18), transparent 70%),
     linear-gradient(180deg, #02110c 0%, #064e3b 55%, #04281e 100%);
 }
 .auth-panel::before {
