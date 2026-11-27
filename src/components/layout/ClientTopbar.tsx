@@ -33,7 +33,7 @@ export default function ClientTopbar({ links }: { links: NavLink[] }) {
 
             <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 sm:px-8 lg:px-12">
                 <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-sm transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
                         <CalendarCheck className="h-5 w-5" />
                     </span>
                     <span className="hidden text-lg font-bold tracking-tight text-ink sm:block">Rendez-vous</span>
@@ -68,7 +68,7 @@ export default function ClientTopbar({ links }: { links: NavLink[] }) {
                 {user !== null && (
                     <div className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-white py-1 pr-1 pl-1 shadow-sm sm:pl-1.5">
                         <Link href="/account" title="Mon compte" className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-xs font-bold text-white">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-bold text-white">
                                 {getInitials(user.firstName, user.lastName)}
                             </span>
                             <span className="hidden max-w-32 truncate text-sm font-medium text-ink md:block">

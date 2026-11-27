@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronRight, Search, Stethoscope, Users, X } from "lucide-react";
+import { Search, Stethoscope, Users, X } from "lucide-react";
 import { apiGet, ApiError } from "@/lib/client/api-client";
 import { ServiceSuggestion } from "@/types/api";
 import { ProfessionalSearchItem } from "@/types/booking";
 import { SEARCH_PAUSE_MS } from "@/lib/client/ui/search-config";
 import PageLoading from "@/components/ui/PageLoading";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import ProfessionalCard from "@/components/professionals/ProfessionalCard";
+import { ProfessionalSuggestionCard, ServiceSuggestionCard } from "@/components/search/SuggestionCards";
 import ProfessionalCarousel from "@/components/search/ProfessionalCarousel";
 import NextAppointmentCard from "@/components/search/NextAppointmentCard";
 import { useSession } from "@/context/session-context";
@@ -145,7 +144,7 @@ export default function UnifiedSearch() {
                     Prenez rendez-vous avec le bon{" "}
                     <span className="relative inline-block whitespace-nowrap">
                         {/* Même police que le reste du site : seul le dégradé de couleur distingue le mot */}
-                        <span className="bg-gradient-to-r from-primary via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-primary via-teal-500 to-accent bg-clip-text text-transparent">
                             professionnel.
                         </span>
                         {/* Petit trait courbe sous le mot */}
@@ -237,16 +236,14 @@ export default function UnifiedSearch() {
                         </div>
                     </div>
 
-                    {/* Suggestions de professionnels, sous la recherche */}
-                    <ProfessionalCarousel onLoaded={handleCarouselLoaded} />
-
-            {/* Résultats */}
-            <div className="min-h-48">
-                {hasQuery === false && (
-                    <div className="flex h-40 items-center justify-center px-4 text-center text-sm text-muted">
-                        Tapez un mot pour lancer la recherche.
+                    {/* Suggestions : elles laissent leur place aux résultats dès qu'on tape une recherche.
+                        (Le composant reste chargé, simplement caché, pour garder les raccourcis de spécialités.) */}
+                    <div className={hasQuery ? "hidden" : ""}>
+                        <ProfessionalCarousel onLoaded={handleCarouselLoaded} />
                     </div>
-                )}
+
+            {/* Résultats : à la place des suggestions */}
+            <div className={hasQuery ? "min-h-48" : "hidden"}>
 
                 {hasQuery && settled === false && (
                     <PageLoading kind="search" label="Recherche..." tone="client" compact />
@@ -273,29 +270,10 @@ export default function UnifiedSearch() {
                                         {services.length}
                                     </span>
                                 </h2>
-                                <ul className="stagger grid gap-3 sm:grid-cols-2">
+                                <ul className="stagger grid grid-cols-2 gap-3 md:grid-cols-3">
                                     {services.map((service, index) => (
                                         <li key={service.id} style={{ "--i": index } as React.CSSProperties}>
-                                            <Link
-                                                href={"/professionals?serviceId=" + service.id}
-                                                className="group flex h-full items-center justify-between gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
-                                            >
-                                                <span className="min-w-0">
-                                                    <span className="block font-semibold text-ink">
-                                                        {service.name}
-                                                    </span>
-                                                    {service.description !== null && (
-                                                        <span className="line-clamp-2 block text-sm text-muted">
-                                                            {service.description}
-                                                        </span>
-                                                    )}
-                                                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary">
-                                                        <Users className="h-3.5 w-3.5" />
-                                                        Voir les professionnels
-                                                    </span>
-                                                </span>
-                                                <ChevronRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-1" />
-                                            </Link>
+                                            <ServiceSuggestionCard service={service} />
                                         </li>
                                     ))}
                                 </ul>
@@ -311,14 +289,11 @@ export default function UnifiedSearch() {
                                         {professionals.length}
                                     </span>
                                 </h2>
-                                <ul className="stagger space-y-4">
+                                <ul className="stagger grid grid-cols-2 gap-3 md:grid-cols-3">
                                     {professionals.map((professional, index) => (
-                                        <ProfessionalCard
-                                            key={professional.userId}
-                                            professional={professional}
-                                            serviceId={null}
-                                            index={index}
-                                        />
+                                        <li key={professional.userId} style={{ "--i": index } as React.CSSProperties}>
+                                            <ProfessionalSuggestionCard professional={professional} />
+                                        </li>
                                     ))}
                                 </ul>
                             </section>

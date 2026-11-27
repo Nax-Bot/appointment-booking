@@ -35,7 +35,7 @@ export default function ProfessionalCard({ professional, serviceId, index = 0 }:
                 href={href}
                 className="group flex items-start gap-4 rounded-2xl border border-line bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
             >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-tint to-white text-lg font-bold text-primary ring-1 ring-primary/15">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-soft to-white text-lg font-bold text-accent ring-1 ring-accent/20">
                     {getInitials(professional.firstName, professional.lastName)}
                 </div>
 

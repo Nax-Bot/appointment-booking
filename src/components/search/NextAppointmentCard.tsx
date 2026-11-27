@@ -79,7 +79,7 @@ export default function NextAppointmentCard() {
             {loading === false && next !== null && (
                 <Link href="/appointments" className="group block">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-tint to-white text-sm font-bold text-primary ring-1 ring-primary/15">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-soft to-white text-sm font-bold text-accent ring-1 ring-accent/20">
                             {getInitials(next.professional.firstName, next.professional.lastName)}
                         </span>
                         <span className="min-w-0">

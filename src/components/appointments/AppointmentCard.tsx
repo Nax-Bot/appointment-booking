@@ -199,8 +199,8 @@ function ClientAppointmentCard({
                 {/* Bloc date : mois, jour, année */}
                 <div
                     className={
-                        "flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-lg border border-line bg-tint/60 leading-none transition-colors duration-200 group-hover:border-primary/30 " +
-                        (muted ? "text-muted" : "text-primary")
+                        "flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-lg border border-line bg-accent-soft/70 leading-none transition-colors duration-200 group-hover:border-primary/30 " +
+                        (muted ? "text-muted" : "text-accent")
                     }
                 >
                     <span className="text-[11px] font-semibold tracking-wide uppercase">{month}</span>

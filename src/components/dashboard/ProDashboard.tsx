@@ -127,6 +127,7 @@ export default function ProDashboard() {
                 <StatCard
                     icon={<Banknote className="h-5 w-5" />}
                     label="Revenus du mois"
+                    accent="violet"
                     value={formatPrice(stats.monthRevenue)}
                     hint="Confirmés et terminés"
                     small
@@ -158,12 +159,12 @@ interface StatCardProps {
     label: string;
     value: string;
     hint: string;
-    accent?: "default" | "amber";
+    accent?: "default" | "amber" | "violet";
     small?: boolean; // un nombre long (le prix) : texte un peu plus petit
 }
 
 function StatCard({ icon, label, value, hint, accent = "default", small = false }: StatCardProps) {
-    const iconClass = accent === "amber" ? "bg-amber-100 text-amber-700" : "bg-tint text-primary";
+    const iconClass = accent === "amber" ? "bg-amber-100 text-amber-700" : accent === "violet" ? "bg-accent-soft text-accent" : "bg-tint text-primary";
     return (
         <div className="rounded-2xl border border-line bg-white p-4 sm:p-5">
             <div className="flex items-center justify-between">
@@ -213,7 +214,7 @@ function Panel({
 function EmptyLine({ icon, text }: { icon: React.ReactNode; text: string }) {
     return (
         <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-sm text-muted">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-tint text-primary">{icon}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">{icon}</span>
             {text}
         </div>
     );

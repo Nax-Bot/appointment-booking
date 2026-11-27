@@ -59,7 +59,7 @@ export default function ProTopbar({ pendingCount }: { pendingCount: number }) {
                         title="Mon profil"
                         className="flex items-center gap-2.5 rounded-full border border-line bg-white py-1 pr-4 pl-1 shadow-sm transition-colors hover:bg-tint"
                     >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-xs font-bold text-white">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-bold text-white">
                             {getInitials(user.firstName, user.lastName)}
                         </span>
                         <span className="leading-tight">

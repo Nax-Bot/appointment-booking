@@ -89,6 +89,10 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
 
     // « settled » = la liste affichée correspond au filtre choisi
     const settled = loadedStatus === statusFilter;
+    // Une première liste est déjà arrivée : à partir de là, changer de filtre ne vide plus la page.
+    // L'ancienne liste reste affichée (légèrement estompée) jusqu'à l'arrivée de la nouvelle, donc rien ne saute.
+    const hasLoadedOnce = loadedStatus !== null;
+    const refreshing = hasLoadedOnce && settled === false;
 
     // À venir ou en cours (fin pas encore passée), et passés.
     // Les dates ISO en UTC se comparent comme du texte.
@@ -209,11 +213,15 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                                     }
                                 >
                                     {item.label}
-                                    {settled && (
-                                        <span className={"ml-2 text-xs " + (active ? "text-white/80" : "text-muted")}>
-                                            {item.count}
-                                        </span>
-                                    )}
+                                    {/* Le nombre reste affiché (largeur fixe) : le bouton ne change jamais de taille */}
+                                    <span
+                                        className={
+                                            "ml-2 inline-block min-w-4 text-center text-xs tabular-nums " +
+                                            (active ? "text-white/80" : "text-muted")
+                                        }
+                                    >
+                                        {hasLoadedOnce ? item.count : "·"}
+                                    </span>
                                 </button>
                             );
                         })}
@@ -254,17 +262,24 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
             <SuccessMessage message={successMessage} />
 
             {/* Zone de liste : hauteur minimale, pour que la page ne saute pas */}
-            <div className="min-h-64">
-                {settled === false && (
+            <div className={"relative min-h-64 transition-opacity duration-200 " + (refreshing ? "pointer-events-none opacity-50" : "")}>
+                {/* Fine barre de chargement en haut de la zone pendant le changement de filtre */}
+                {refreshing && (
+                    <div className="absolute inset-x-0 top-0 h-0.5 overflow-hidden rounded-full bg-line">
+                        <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+                    </div>
+                )}
+
+                {hasLoadedOnce === false && (
                     <PageLoading
                         kind={role === "PROFESSIONAL" ? "people" : "calendar"}
                         label="Chargement de vos rendez-vous..."
                     />
                 )}
 
-                {settled && loadError !== "" && <ErrorMessage message={loadError} details={[]} />}
+                {hasLoadedOnce && loadError !== "" && <ErrorMessage message={loadError} details={[]} />}
 
-                {settled && loadError === "" && items.length === 0 && (
+                {hasLoadedOnce && loadError === "" && items.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-line bg-white p-8 text-center">
                         <CalendarDays className="mx-auto mb-3 h-8 w-8 text-muted" />
                         <p className="font-medium text-ink">{emptyTitle}</p>
@@ -284,7 +299,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                     </div>
                 )}
 
-                {settled && loadError === "" && items.length > 0 && (
+                {hasLoadedOnce && loadError === "" && items.length > 0 && (
                     <div>
                         {isClient && tab === "upcoming" && upcoming.length === 0 && (
                             <div className="rounded-2xl border border-dashed border-line bg-white p-8 text-center">
@@ -306,7 +321,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                                 <h2 className={"mb-3 text-sm font-semibold tracking-wide text-muted uppercase " + (isClient ? "hidden" : "")}>
                                     À venir et en cours
                                 </h2>
-                                <ul className="stagger grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                                <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                                     {upcoming.map((item) => (
                                         <AppointmentCard
                                             key={item.id}
@@ -327,7 +342,7 @@ export default function AppointmentsView({ role }: AppointmentsViewProps) {
                                 <h2 className={"mb-3 text-sm font-semibold tracking-wide text-muted uppercase " + (isClient ? "hidden" : "")}>
                                     Passés
                                 </h2>
-                                <ul className="stagger grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                                <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                                     {past.map((item) => (
                                         <AppointmentCard
                                             key={item.id}

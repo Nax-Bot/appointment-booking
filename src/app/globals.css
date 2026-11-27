@@ -77,6 +77,7 @@ body {
   background-image:
     radial-gradient(60rem 30rem at 100% -10%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 60%),
     radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 60%),
+    radial-gradient(36rem 22rem at 0% -5%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 60%),
     radial-gradient(34rem 22rem at 70% 105%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 60%);
   background-attachment: fixed;
 }
@@ -124,7 +125,8 @@ body {
   overflow: hidden;
   background:
     radial-gradient(60% 45% at 15% 100%, rgb(52 211 153 / 0.45), transparent 70%),
-    radial-gradient(50% 40% at 90% 40%, rgb(21 128 61 / 0.35), transparent 70%),
+    radial-gradient(50% 40% at 90% 40%, rgb(124 107 214 / 0.38), transparent 70%),
+    radial-gradient(45% 35% at 10% 0%, rgb(124 107 214 / 0.18), transparent 70%),
     linear-gradient(180deg, #02110c 0%, #064e3b 55%, #04281e 100%);
 }
 .auth-panel::before {

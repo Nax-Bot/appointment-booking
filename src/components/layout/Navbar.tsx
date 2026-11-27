@@ -109,7 +109,7 @@ export default function Navbar({ groups }: NavbarProps) {
             <div className="flex h-full flex-col gap-3 p-3 lg:gap-5 lg:p-5">
                 <div className="flex items-center justify-between">
                     <Link href="/" className="group flex items-center gap-2.5">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-sm transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
                             <CalendarCheck className="h-5 w-5" />
                         </span>
                         <span className="text-lg font-bold tracking-tight text-ink">Rendez-vous</span>
@@ -145,7 +145,8 @@ export default function Navbar({ groups }: NavbarProps) {
                 <nav aria-label="Navigation principale" className="hidden flex-1 flex-col gap-5 lg:flex">
                     {groups.map((group) => (
                         <div key={group.title}>
-                            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted/80 uppercase">
+                            <p className="mb-1.5 flex items-center gap-2 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted/80 uppercase">
+                                <span className="h-1.5 w-1.5 rounded-full bg-accent/70" />
                                 {group.title}
                             </p>
                             <div className="flex flex-col gap-0.5">{group.links.map((link) => renderLink(link))}</div>
@@ -157,7 +158,7 @@ export default function Navbar({ groups }: NavbarProps) {
                 <div className="hidden lg:block">
                     {user !== null && (
                         <div className="mb-3 flex items-center gap-3 rounded-xl border border-line bg-white p-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-sm font-bold text-white ring-2 ring-white">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-sm font-bold text-white ring-2 ring-white">
                                 {getInitials(user.firstName, user.lastName)}
                             </div>
                             <div className="min-w-0 text-sm leading-tight">

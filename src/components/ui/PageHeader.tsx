@@ -13,9 +13,14 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, eyebrow, actions }: PageHeaderProps) {
     return (
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
+        <header className="relative mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
+            {/* Petit trait de couleur (vert puis violet) posé sur la ligne de séparation */}
+            <span
+                aria-hidden="true"
+                className="absolute -bottom-px left-0 h-0.5 w-20 rounded-full bg-gradient-to-r from-primary to-accent"
+            />
             <div className="min-w-0 flex-1 basis-72">
-                {eyebrow !== undefined && <p className="mb-1 text-sm font-medium text-muted">{eyebrow}</p>}
+                {eyebrow !== undefined && <p className="mb-1 text-sm font-medium text-accent">{eyebrow}</p>}
                 <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
                 {description !== undefined && (
                     <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted">{description}</p>

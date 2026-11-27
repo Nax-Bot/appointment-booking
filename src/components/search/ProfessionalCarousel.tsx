@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { apiGet } from "@/lib/client/api-client";
 import { ProfessionalSearchItem } from "@/types/booking";
-import { getInitials } from "@/lib/client/format/text-helpers";
+import { ProfessionalSuggestionCard } from "@/components/search/SuggestionCards";
 
 // Nombre maximum de professionnels proposés dans le carrousel
 const MAX_SUGGESTIONS = 12;
@@ -100,34 +99,11 @@ export default function ProfessionalCarousel({
                     ))}
 
                 {loading === false &&
-                    items.map((professional) => {
-                        let specialty = "Spécialité non renseignée";
-                        if (professional.specialty !== null) {
-                            specialty = professional.specialty;
-                        }
-                        return (
-                            <li key={professional.userId} className="w-56 shrink-0 snap-start">
-                                <Link
-                                    href={"/professionals/" + professional.userId}
-                                    className="group flex h-full flex-col items-center rounded-2xl border border-line bg-white p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
-                                >
-                                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-tint to-white text-lg font-bold text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                                        {getInitials(professional.firstName, professional.lastName)}
-                                    </span>
-                                    <span className="mt-3 w-full truncate font-semibold text-ink">
-                                        {professional.firstName} {professional.lastName}
-                                    </span>
-                                    <span className="mt-0.5 line-clamp-1 w-full text-sm text-muted">
-                                        {specialty}
-                                    </span>
-                                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary">
-                                        Voir le profil
-                                        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                                    </span>
-                                </Link>
-                            </li>
-                        );
-                    })}
+                    items.map((professional) => (
+                        <li key={professional.userId} className="w-56 shrink-0 snap-start">
+                            <ProfessionalSuggestionCard professional={professional} />
+                        </li>
+                    ))}
             </ul>
         </section>
     );
