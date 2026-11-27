@@ -102,8 +102,6 @@ function VerifyEmailForm() {
             return;
         }
         setSubmitting(true);
-        setErrorMessage("");
-        setInfoMessage("");
 
         try {
             await verifyEmail(email, code);
@@ -123,6 +121,7 @@ function VerifyEmailForm() {
                 setErrorMessage("Erreur inattendue");
             }
             shake();
+            setInfoMessage("");
             setDigits(emptyDigits());
             setFocusSignal((value) => value + 1);
         }

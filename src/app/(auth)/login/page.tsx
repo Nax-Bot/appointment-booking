@@ -133,14 +133,16 @@ function LoginForm() {
         if (isLocked) {
             return;
         }
-        setErrorMessage("");
-        setErrorDetails([]);
+        // On garde l'ancienne erreur affichée pendant l'envoi : elle est remplacée à la réponse.
+        // La vider ici puis la réafficher faisait « pomper » la page à chaque tentative.
         setSubmitting(true);
 
         try {
             await login(email, password);
             // Succès : le layout (auth) voit l'utilisateur et redirige vers "/"
             writeStoredLock(null);
+            setErrorMessage("");
+            setErrorDetails([]);
         } catch (error) {
             // Mot de passe juste mais e-mail pas encore vérifié : on envoie la personne saisir son code
             if (

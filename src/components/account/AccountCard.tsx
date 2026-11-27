@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, SubmitEvent, useEffect, useState } from "react";
-import { KeyRound, Lock, Pencil } from "lucide-react";
+import { Briefcase, FileText, KeyRound, Lock, Mail, Pencil, Phone, User, type LucideIcon } from "lucide-react";
 import { apiPatch, ApiError } from "@/lib/client/api-client";
 import { useSession } from "@/context/session-context";
 import { Professional, UpdateProfileInput } from "@/types/api";
@@ -27,11 +27,17 @@ function emptyToNull(text: string): string | null {
 }
 
 // Une ligne de la carte : l'étiquette en petit, la valeur dessous, un trait fin entre les lignes
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, icon: Icon, tone, children }: { label: string; icon: LucideIcon; tone: "primary" | "accent"; children: ReactNode }) {
+    const chip = tone === "accent" ? "bg-accent-soft text-accent" : "bg-tint text-primary";
     return (
-        <div className="border-b border-line py-3.5 last:border-b-0">
-            <p className="text-xs text-muted">{label}</p>
-            <div className="mt-0.5 text-sm font-medium text-ink">{children}</div>
+        <div className="flex items-start gap-3.5 border-b border-line py-3.5 last:border-b-0">
+            <span className={"mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl " + chip}>
+                <Icon className="h-[18px] w-[18px]" />
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted">{label}</p>
+                <div className="mt-0.5 text-sm font-medium text-ink">{children}</div>
+            </div>
         </div>
     );
 }
@@ -234,16 +240,16 @@ export default function AccountCard({ editOpen, onEditOpenChange, professional =
             <SuccessMessage message={successMessage} />
 
             <div>
-                <Row label="Prénom et nom">
+                <Row label="Prénom et nom" icon={User} tone="primary">
                     {user.firstName} {user.lastName}
                 </Row>
-                <Row label="Adresse e-mail">{user.email}</Row>
-                <Row label="Téléphone">{user.phoneNumber ? user.phoneNumber : <Empty />}</Row>
+                <Row label="Adresse e-mail" icon={Mail} tone="accent">{user.email}</Row>
+                <Row label="Téléphone" icon={Phone} tone="primary">{user.phoneNumber ? user.phoneNumber : <Empty />}</Row>
 
                 {isPro && (
                     <>
-                        <Row label="Spécialité">{professional?.specialty ? professional.specialty : <Empty />}</Row>
-                        <Row label="Description">
+                        <Row label="Spécialité" icon={Briefcase} tone="accent">{professional?.specialty ? professional.specialty : <Empty />}</Row>
+                        <Row label="Description" icon={FileText} tone="primary">
                             {professional?.description ? (
                                 <span className="font-normal whitespace-pre-line">{professional.description}</span>
                             ) : (
@@ -255,12 +261,12 @@ export default function AccountCard({ editOpen, onEditOpenChange, professional =
 
                 {isClient && (savedBirthDate !== null || savedAddress !== null) && (
                     <>
-                        <Row label="Date de naissance">{savedBirthDate ? formatLongDate(savedBirthDate.slice(0, 10)) : <Empty />}</Row>
-                        <Row label="Adresse">{savedAddress ? savedAddress : <Empty />}</Row>
+                        <Row label="Date de naissance" icon={FileText} tone="accent">{savedBirthDate ? formatLongDate(savedBirthDate.slice(0, 10)) : <Empty />}</Row>
+                        <Row label="Adresse" icon={FileText} tone="primary">{savedAddress ? savedAddress : <Empty />}</Row>
                     </>
                 )}
 
-                <Row label="Mot de passe">
+                <Row label="Mot de passe" icon={KeyRound} tone="accent">
                     <div className="flex items-center justify-between gap-3">
                         <span className="tracking-widest text-muted">••••••••••</span>
                         <button

@@ -50,7 +50,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 </div>
             </aside>
 
-            <section className="flex items-center justify-center p-6 sm:p-10">
+            {/* items-start : le formulaire est accroché en haut. Avec items-center, chaque message qui
+                apparaît faisait remonter tout le formulaire (recentrage). */}
+            <section className="flex items-start justify-center p-6 pt-12 sm:p-10 sm:pt-[12vh] lg:pt-[16vh]">
                 <div className="auth-form animate-rise w-full max-w-sm">
                     {/* Petite étoile de marque, comme sur la maquette */}
                     <svg viewBox="0 0 24 24" className="mb-5 h-8 w-8 text-mint" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">

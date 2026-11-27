@@ -111,7 +111,7 @@ export default function DateInput({ label, value, onChange, onBlur, error = "" }
     }
 
     return (
-        <div className="mb-4 block">
+        <div className="block">
             <label className="block">
                 <span className="mb-1 block text-sm font-medium text-ink">{label}</span>
                 <span className="relative block">
@@ -149,7 +149,9 @@ export default function DateInput({ label, value, onChange, onBlur, error = "" }
                     </button>
                 </span>
             </label>
-            {hasError && <span className="mt-1 block text-xs text-red-600">{shownError}</span>}
+            <span className="mt-1 mb-1 block min-h-4 text-xs leading-4 text-red-600">
+                {hasError && <span className="animate-fade-in">{shownError}</span>}
+            </span>
         </div>
     );
 }

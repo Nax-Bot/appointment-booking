@@ -94,8 +94,6 @@ function ResetPasswordForm() {
             return;
         }
 
-        setErrorMessage("");
-        setInfoMessage("");
         setSubmitting(true);
         const body: ResetPasswordInput = { email: email, code: code, newPassword: password };
         try {
@@ -108,6 +106,7 @@ function ResetPasswordForm() {
                 setLocked(true);
             }
             setErrorMessage(error instanceof ApiError ? error.message : "Erreur inattendue");
+            setInfoMessage("");
             setDigits(emptyDigits());
             setFocusSignal(focusSignal + 1);
             setSubmitting(false);

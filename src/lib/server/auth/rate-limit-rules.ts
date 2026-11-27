@@ -1,13 +1,23 @@
-// Une règle de limitation : combien d'échecs, dans quelle fenêtre, et combien de temps de blocage
+/** 
+ * Une règle de limitation : 
+ * combien d'échecs ?
+ * dans quelle fenêtre ?
+ * et combien de temps de blocage ?
+ * 
+ * */
 export interface RateLimitRule {
     maxFailures: number;
     windowSeconds: number;
     blockSeconds: number;
 }
 
-// Connexion : 5 échecs en 15 minutes pour un même COUPLE email + adresse IP, puis blocage de 15 minutes.
-// Le couple est ce qui bloque : un tiers qui tape de faux mots de passe depuis SON adresse
-// ne peut donc pas empêcher le vrai propriétaire de se connecter depuis la sienne.
+/**
+ * Connexion : 5 échecs en 15 minutes pour un même COUPLE
+ * COUPLE [ email + adresse IP]
+ * /> puis blocage de 15 minutes.
+ * Le couple est ce qui bloque : un tiers qui tape de faux mots de passe depuis SON adresse
+ * ne peut donc pas empêcher le vrai propriétaire de se connecter depuis la sienne.
+ * */
 export const LOGIN_BY_PAIR_RULE: RateLimitRule = {
     maxFailures: 5,
     windowSeconds: 15 * 60,

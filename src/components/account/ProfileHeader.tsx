@@ -20,11 +20,14 @@ export default function ProfileHeader({ subtitle, onEdit }: ProfileHeaderProps) 
     return (
         <section className="mb-6 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
             {/* Bandeau de couleur, comme une photo de couverture */}
-            <div className="h-24 bg-gradient-to-r from-deep via-primary to-mint/80 sm:h-28" />
+            <div className="relative h-24 overflow-hidden bg-gradient-to-r from-deep via-primary to-accent sm:h-28">
+                <span className="absolute -top-10 right-16 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+                <span className="absolute -right-6 -bottom-12 h-36 w-36 rounded-full bg-mint/30 blur-2xl" />
+            </div>
 
             <div className="flex flex-wrap items-end justify-between gap-4 px-6 pb-6">
                 <div className="flex flex-wrap items-end gap-4">
-                    <div className="-mt-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-white bg-tint text-3xl font-bold text-primary shadow-sm">
+                    <div className="relative -mt-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-white bg-accent-soft text-3xl font-bold text-accent shadow-sm">
                         {getInitials(user.firstName, user.lastName)}
                     </div>
                     <div className="pb-1">
@@ -43,7 +46,7 @@ export default function ProfileHeader({ subtitle, onEdit }: ProfileHeaderProps) 
                                     {user.phoneNumber}
                                 </span>
                             )}
-                            <span className="flex items-center gap-1.5 text-primary">
+                            <span className="flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">
                                 <ShieldCheck className="h-3.5 w-3.5" />
                                 {user.role === "PROFESSIONAL" ? "Professionnel" : "Client"}
                             </span>

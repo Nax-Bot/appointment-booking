@@ -90,8 +90,6 @@ export default function RegisterPage() {
 
     async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
-        setErrorMessage("");
-        setErrorDetails([]);
         setSubmitted(true);
 
         // S'il reste une erreur de saisie, on n'envoie rien au backend
@@ -101,6 +99,9 @@ export default function RegisterPage() {
             getEmailError() !== "" ||
             getPasswordError() !== "";
         if (hasFormError) {
+            // Les erreurs de champ prennent le relais de l'erreur du serveur
+            setErrorMessage("");
+            setErrorDetails([]);
             return;
         }
 
@@ -132,6 +133,7 @@ export default function RegisterPage() {
                 setIsDisplay(true);
             } else {
                 setErrorMessage("Erreur inattendue");
+                setIsDisplay(true);
             }
         }
 

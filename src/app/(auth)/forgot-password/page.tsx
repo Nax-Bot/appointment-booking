@@ -37,7 +37,6 @@ export default function ForgotPasswordPage() {
             return;
         }
 
-        setErrorMessage("");
         setSubmitting(true);
         const body: ForgotPasswordInput = { email: cleanEmail };
         try {

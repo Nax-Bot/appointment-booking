@@ -123,7 +123,12 @@ export default function PaymentAccountSection() {
     const configured = status !== null && status.configured;
 
     // Les moyens de paiement proposés par Papi (texte simple, pas de logos de marques)
-    const methods = ["MVola", "Airtel Money", "Orange Money", "Carte bancaire"];
+    const methods = [
+        { name: "MVola", dot: "bg-yellow-400" },
+        { name: "Airtel Money", dot: "bg-red-500" },
+        { name: "Orange Money", dot: "bg-orange-500" },
+        { name: "Carte bancaire", dot: "bg-accent" },
+    ];
     const benefits = [
         "Rendez-vous confirmé dès le paiement",
         "MVola, Airtel Money, Orange Money, carte",
@@ -167,11 +172,15 @@ export default function PaymentAccountSection() {
                         <div className="mt-4 grid grid-cols-2 gap-2.5">
                             {methods.map((method) => (
                                 <div
-                                    key={method}
+                                    key={method.name}
                                     className="flex items-center justify-center gap-2 rounded-xl border border-line bg-white px-3 py-3 text-sm font-semibold text-ink/80"
                                 >
-                                    {method === "Carte bancaire" && <CreditCard className="h-4 w-4 text-muted" />}
-                                    {method}
+                                    {method.name === "Carte bancaire" ? (
+                                        <CreditCard className="h-4 w-4 text-accent" />
+                                    ) : (
+                                        <span className={"h-2.5 w-2.5 rounded-full " + method.dot} />
+                                    )}
+                                    {method.name}
                                 </div>
                             ))}
                         </div>
@@ -180,13 +189,15 @@ export default function PaymentAccountSection() {
             </section>
 
             {/* Carte foncée : ce que ça apporte, et le bouton pour configurer */}
-            <section className="rounded-2xl bg-deep p-6 text-white shadow-sm">
-                <h2 className="text-xl leading-tight font-semibold">
+            <section className="relative overflow-hidden rounded-2xl bg-deep p-6 text-white shadow-sm">
+                <span className="pointer-events-none absolute -top-16 -right-12 h-48 w-48 rounded-full bg-accent/40 blur-3xl" />
+                <span className="pointer-events-none absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-mint/20 blur-3xl" />
+                <h2 className="relative text-xl leading-tight font-semibold">
                     Paiement
                     <br />
                     en ligne
                 </h2>
-                <ul className="mt-4 space-y-2.5">
+                <ul className="relative mt-4 space-y-2.5">
                     {benefits.map((benefit) => (
                         <li key={benefit} className="flex items-start gap-2.5 text-sm text-white/85">
                             <Check className="mt-0.5 h-4 w-4 shrink-0 text-mint" strokeWidth={3} />
@@ -198,13 +209,13 @@ export default function PaymentAccountSection() {
                     <button
                         type="button"
                         onClick={openModal}
-                        className="mt-6 w-full rounded-xl bg-mint px-4 py-3 text-sm font-semibold text-deep shadow-lg shadow-black/20 transition-all hover:brightness-105 active:scale-[0.98]"
+                        className="relative mt-6 w-full rounded-xl bg-mint px-4 py-3 text-sm font-semibold text-deep shadow-lg shadow-black/20 transition-all hover:brightness-105 active:scale-[0.98]"
                     >
                         {configured ? "Remplacer ma boutique" : "Configurer ma boutique"}
                     </button>
                 )}
                 {status !== null && configured === false && (
-                    <p className="mt-3 text-xs text-white/60">
+                    <p className="relative mt-3 text-xs text-white/60">
                         Sans boutique, les réservations de vos clients sont libérées au bout d&apos;une heure.
                     </p>
                 )}

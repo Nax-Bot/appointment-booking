@@ -11,6 +11,9 @@
   /* Palette : Deep Emerald, Mint Accent (utilisables en bg-deep, text-mint...) */
   --color-deep: #064e3b;
   --color-mint: #34d399;
+  /* Couleur d'accent (violet doux) : touches de couleur, à utiliser avec parcimonie (bg-accent, bg-accent-soft, text-accent) */
+  --color-accent: #7c6bd6;
+  --color-accent-soft: #efecfb;
 
   /* Un style plus sobre : coins peu arrondis, ombres presque invisibles (la bordure fait le travail) */
   --radius-md: 0.3125rem;
@@ -73,7 +76,8 @@ html {
 body {
   background-image:
     radial-gradient(60rem 30rem at 100% -10%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 60%),
-    radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 60%);
+    radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 60%),
+    radial-gradient(34rem 22rem at 70% 105%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 60%);
   background-attachment: fixed;
 }
 

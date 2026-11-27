@@ -47,7 +47,7 @@ export default function Input({
     }
 
     return (
-        <label className="mb-4 block">
+        <label className="block">
             <span className="mb-1 block text-sm font-medium text-ink">{label}</span>
             <input
                 type={type}
@@ -61,16 +61,16 @@ export default function Input({
                     fieldClass
                 }
             />
-            {(hasError || maxLength !== undefined) && (
-                <span className="mt-1 flex gap-2 text-xs">
-                    {hasError && <span className="text-red-600">{error}</span>}
-                    {maxLength !== undefined && (
-                        <span className={"ml-auto " + counterClass}>
-                            {value.length} / {maxLength}
-                        </span>
-                    )}
-                </span>
-            )}
+            {/* Ligne toujours présente (même vide) : l'erreur prend la place déjà réservée,
+                le formulaire ne s'étire donc plus quand elle apparaît. */}
+            <span className="mt-1 mb-1 flex min-h-4 gap-2 text-xs leading-4">
+                {hasError && <span className="animate-fade-in text-red-600">{error}</span>}
+                {maxLength !== undefined && (
+                    <span className={"ml-auto " + counterClass}>
+                        {value.length} / {maxLength}
+                    </span>
+                )}
+            </span>
         </label>
     );
 }

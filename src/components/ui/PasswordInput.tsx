@@ -82,7 +82,7 @@ export default function PasswordInput({
 
     return (
         // "relative" = repère de position pour le panneau flottant plus bas
-        <div className="relative mb-4">
+        <div className="relative">
             <label className="block">
                 <span className="mb-1 block text-sm font-medium text-ink">{label}</span>
                 <div className="relative">
@@ -110,7 +110,10 @@ export default function PasswordInput({
                 </div>
             </label>
 
-            {hasError && <span className="mt-1 block text-xs text-red-600">{error}</span>}
+            {/* Ligne d'erreur réservée : l'erreur n'agrandit plus le formulaire */}
+            <span className="mt-1 mb-1 block min-h-4 text-xs leading-4 text-red-600">
+                {hasError && <span className="animate-fade-in">{error}</span>}
+            </span>
 
             {showStrength && focused && (
                 // absolute top-full : le panneau est accroché juste sous le champ et flotte
